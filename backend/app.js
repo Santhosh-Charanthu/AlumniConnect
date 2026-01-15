@@ -21,7 +21,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/alumni", alumniRoutes);
 
-console.log("Alumni routes loaded!");
+console.log("Alumni routes loaded");
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
