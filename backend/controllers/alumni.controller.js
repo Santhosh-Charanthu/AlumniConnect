@@ -146,7 +146,8 @@ exports.createSession = async (req, res) => {
 exports.getMySessions = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const alumni = await Alumni.findOne({ userId: userId });
+    // const user = await User.findById(userId);
+    const alumni = await Alumni.findOne({ userId: userId }).populate("userId");
 
     const sessions = await Session.find({
       alumniId: alumni._id,
