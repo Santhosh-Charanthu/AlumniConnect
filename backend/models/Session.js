@@ -43,13 +43,39 @@ const sessionSchema = new mongoose.Schema(
 
     maxSeats: Number,
 
+    bookedStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+
+    currentSeats: {
+      type: Number,
+      default: 0,
+    },
+
+    category: {
+      type: String,
+    },
+
+    rating: {
+      type: Number,
+      default: 0,
+    },
+
+    reviewsCount: {
+      type: Number,
+      default: 0,
+    },
+
     status: {
       type: String,
       enum: ["scheduled", "completed", "cancelled"],
       default: "scheduled",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Session", sessionSchema);

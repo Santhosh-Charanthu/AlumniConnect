@@ -1,7 +1,7 @@
 "use client";
-import styles from "../../register/register.module.css";
+import styles from "../../../register/register.module.css";
 import { useState, useEffect } from "react";
-import { useToast } from "../../context/ToastContext";
+import { useToast } from "../../../context/ToastContext";
 import { useRouter } from "next/navigation";
 
 export default function EditProfilePage() {
@@ -50,7 +50,7 @@ export default function EditProfilePage() {
   const filteredSkills = predefinedSkills.filter(
     (skill) =>
       skill.toLowerCase().includes(skillInput.toLowerCase()) &&
-      !selectedSkills.includes(skill)
+      !selectedSkills.includes(skill),
   );
 
   const addSkill = (skill) => {
@@ -61,7 +61,7 @@ export default function EditProfilePage() {
 
   const removeSkill = (skillToRemove) => {
     setSelectedSkills(
-      selectedSkills.filter((skill) => skill !== skillToRemove)
+      selectedSkills.filter((skill) => skill !== skillToRemove),
     );
   };
 
@@ -372,8 +372,8 @@ export default function EditProfilePage() {
                 {image
                   ? image.name
                   : existingImage
-                  ? "Click to change profile image"
-                  : "Click to upload profile image"}
+                    ? "Click to change profile image"
+                    : "Click to upload profile image"}
               </label>
 
               <span className={styles.fileHint}>

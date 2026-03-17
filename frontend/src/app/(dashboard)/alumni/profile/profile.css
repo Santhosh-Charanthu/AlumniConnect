@@ -323,3 +323,40 @@
     text-align: center;
   }
 }
+
+.avatar-wrapper {
+  position: relative;
+  width: fit-content;
+}
+
+.avatar-img {
+  border-radius: 50%;
+  border: 4px solid white;
+}
+
+/* Floating pencil button */
+.edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+
+  background: #f1f1f1;
+  border: none;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Hover effect */
+.edit-icon:hover {
+  transform: scale(1.05);
+}

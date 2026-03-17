@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import AboutModal from "../components/profile/AboutModal";
-import ExperienceModal from "../components/profile/ExperienceModal";
-import ProjectModal from "../components/profile/ProjectModal";
-import AchievementModal from "../components/profile/AchievementModal";
+import AboutModal from "../../../components/profile/AboutModal";
+import ExperienceModal from "../../../components/profile/ExperienceModal";
+import ProjectModal from "../../../components/profile/ProjectModal";
+import AchievementModal from "../../../components/profile/AchievementModal";
 import { useRouter } from "next/navigation";
-import { useToast } from "../context/ToastContext";
+import { useToast } from "../../../context/ToastContext";
 import Image from "next/image";
+import { Pencil } from "lucide-react";
 import "./profile.css";
 
 export default function AlumniProfile() {
@@ -181,21 +182,23 @@ export default function AlumniProfile() {
         {/* HERO SECTION */}
         <section className="profile-hero">
           <div className="hero-left">
-            <Image
-              src={profile.profileImage.url}
-              alt={`${profile.name} profile`}
-              loading="eager"
-              width={110}
-              height={110}
-              className="avatar-img"
-            />
+            <div className="avatar-wrapper">
+              <Image
+                src={profile.profileImage.url}
+                alt={`${profile.name} profile`}
+                width={110}
+                height={110}
+                className="avatar-img"
+              />
+
+              <button
+                className="edit-icon"
+                onClick={() => router.push("/alumni/edit-profile")}
+              >
+                <Pencil size={16} />
+              </button>
+            </div>
           </div>
-          <button
-            className="btn ghost"
-            onClick={() => router.push("/alumni/edit-profile")}
-          >
-            Edit Profile
-          </button>
 
           <div className="hero-right">
             <h1>{user.name}</h1>
@@ -229,7 +232,7 @@ export default function AlumniProfile() {
               >
                 {tab}
               </button>
-            )
+            ),
           )}
         </nav>
 
