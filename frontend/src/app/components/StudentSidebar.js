@@ -4,16 +4,16 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  CalendarPlus,
   CalendarCheck,
+  Compass,
+  User,
   Bell,
   MessageSquare,
-  User,
   LogOut,
 } from "lucide-react";
 import "../../styles/Sidebar.css";
 
-export default function Sidebar({ isOpen, setIsOpen }) {
+export default function StudentSidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -23,16 +23,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   };
 
   const menuItems = [
-    { name: "Dashboard", href: "/alumni/dashboard", icon: LayoutDashboard },
-    {
-      name: "Create Session",
-      href: "/alumni/create-session",
-      icon: CalendarPlus,
-    },
-    { name: "My Sessions", href: "/alumni/my-sessions", icon: CalendarCheck },
-    { name: "Notifications", href: "/alumni/notifications", icon: Bell },
-    { name: "Messaging", href: "/alumni/messages", icon: MessageSquare },
-    { name: "Profile", href: "/alumni/profile", icon: User },
+    { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+    { name: "My Sessions", href: "/student/my-sessions", icon: CalendarCheck },
+    { name: "Explore Alumni", href: "/student/explore-alumni", icon: Compass },
+    { name: "Profile", href: "/student/profile", icon: User },
+    { name: "Notifications", href: "/student/notifications", icon: Bell },
+    { name: "Messaging", href: "/student/messages", icon: MessageSquare },
   ];
 
   return (

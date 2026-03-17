@@ -1,0 +1,163 @@
+/* Loading / not found states */
+.profile-loading,
+.profile-not-found {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* Back button */
+.pub-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: background 0.2s;
+}
+
+.pub-back-btn:hover {
+  background: #f3f4f6;
+}
+
+/* Sessions tab */
+.pub-sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pub-session-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  transition: box-shadow 0.2s;
+}
+
+.pub-session-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pub-session-info h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px;
+}
+
+.pub-session-meta {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.pub-session-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pub-session-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pub-session-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Reviews tab */
+.pub-reviews-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pub-reviews-header h3 {
+  margin: 0;
+}
+
+.pub-avg-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pub-review-count {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.pub-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pub-review-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.pub-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.pub-reviewer-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.pub-review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.pub-review-comment {
+  font-size: 0.88rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.pub-review-date {
+  font-size: 0.78rem;
+  color: #9ca3af;
+}
+
+/* Certificate link */
+.certificate-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #2563eb;
+  text-decoration: underline;
+}

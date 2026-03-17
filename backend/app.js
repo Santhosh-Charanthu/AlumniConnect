@@ -7,6 +7,7 @@ const experienceRoutes = require("./routes/experience.routes");
 const achievementRoutes = require("./routes/achievement.routes");
 const projectRoutes = require("./routes/project.routes");
 const alumniRoutes = require("./routes/alumni.routes");
+const studentRoutes = require("./routes/student.routes");
 const PORT = process.env.PORT || 3000;
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/api/experience", experienceRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/alumni", alumniRoutes);
+app.use("/api/student", studentRoutes);
 
 console.log("Alumni routes loaded!");
 
