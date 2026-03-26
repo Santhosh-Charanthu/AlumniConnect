@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = "force-dynamic";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -12,7 +13,6 @@ import { useChat } from "../../../../hooks/useChat";
 import { useMessages } from "../../../context/MessageContext";
 import Loader from "../../../components/Loader";
 import "./messages.css";
-export const dynamic = "force-dynamic";
 const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
 function getInitials(name = "") {
