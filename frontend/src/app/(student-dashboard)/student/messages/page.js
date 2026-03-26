@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -12,6 +14,7 @@ import { useChat } from "../../../../hooks/useChat";
 import { useMessages } from "../../../context/MessageContext";
 import Loader from "../../../components/Loader";
 import "./messages.css";
+
 const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
 function getInitials(name = "") {
@@ -46,7 +49,6 @@ function isSameDay(a, b) {
     da.getDate() === db.getDate();
 }
 
-// ── Typing dots animation ─────────────────────────────────────
 function TypingBubble() {
   return (
     <div className="typing-bubble">
@@ -55,10 +57,8 @@ function TypingBubble() {
   );
 }
 
-// ── Media bubble ──────────────────────────────────────────────
 async function downloadPdf(url, name) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
   const proxyUrl = `${API}/chat/proxy-download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name || "document.pdf")}`;
   try {
     const res = await fetch(proxyUrl, { headers: { Authorization: `Bearer ${token}` } });
@@ -87,11 +87,7 @@ function MediaBubble({ msg }) {
     );
   }
   if (msg.mediaType === "video") {
-    return (
-      <video controls className="media-video" src={msg.mediaUrl}>
-        Your browser does not support video.
-      </video>
-    );
+    return <video controls className="media-video" src={msg.mediaUrl}>Your browser does not support video.</video>;
   }
   if (msg.mediaType === "pdf") {
     return (
@@ -105,7 +101,6 @@ function MediaBubble({ msg }) {
   return null;
 }
 
-// ── Context menu ─────────────────────────────────────────────
 function ContextMenu({ onEdit, onDelete, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -113,7 +108,6 @@ function ContextMenu({ onEdit, onDelete, onClose }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
-
   return (
     <div ref={ref} className="ctx-menu">
       <button onClick={onEdit}><Pencil size={13} /> Edit</button>
@@ -122,41 +116,33 @@ function ContextMenu({ onEdit, onDelete, onClose }) {
   );
 }
 
-// ── Chat panel ────────────────────────────────────────────────
 function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, myId, onBack, isGroupActive = true }) {
   const [input, setInput] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editInput, setEditInput] = useState("");
   const [typingTimer, setTypingTimer] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null); // msg._id to confirm // msg._id
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [groupDeactivated, setGroupDeactivated] = useState(!isGroupActive);
-  const [mediaPreview, setMediaPreview] = useState(null); // { url, type, name, file }
+  const [mediaPreview, setMediaPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
-  const listRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const { messages, loading, typingUsers, sendMessage, editMessage, deleteMessage, sendTyping } =
     useChat(type, targetId);
 
-  // Listen for group deactivation
   useEffect(() => {
     const socket = getSocket();
     if (!socket || type !== "group") return;
-    const onDeactivated = ({ groupId }) => {
-      if (groupId === targetId) setGroupDeactivated(true);
-    };
+    const onDeactivated = ({ groupId }) => { if (groupId === targetId) setGroupDeactivated(true); };
     socket.on("group:deactivated", onDeactivated);
     return () => socket.off("group:deactivated", onDeactivated);
   }, [targetId, type]);
 
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!loading) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
+    if (!loading) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   const handleSend = useCallback(async () => {
@@ -173,9 +159,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
           body: formData,
         });
         const data = await res.json();
-        if (data.success) {
-          sendMessage(input.trim(), { url: data.url, type: data.mediaType, name: data.mediaName });
-        }
+        if (data.success) sendMessage(input.trim(), { url: data.url, type: data.mediaType, name: data.mediaName });
       } catch (e) { console.error(e); }
       finally { setUploading(false); }
       setMediaPreview(null);
@@ -195,8 +179,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
     let type = "image";
     if (mime.startsWith("video/")) type = "video";
     else if (mime === "application/pdf") type = "pdf";
-    const url = URL.createObjectURL(file);
-    setMediaPreview({ url, type, name: file.name, file });
+    setMediaPreview({ url: URL.createObjectURL(file), type, name: file.name, file });
     e.target.value = "";
   };
 
@@ -209,38 +192,17 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
     sendTyping(true);
     clearTimeout(typingTimer);
     setTypingTimer(setTimeout(() => sendTyping(false), 2000));
-    // Auto-resize textarea
     e.target.style.height = "auto";
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
   };
 
-  const openCtx = (msg) => {
-    setActiveMenu((prev) => prev === msg._id ? null : msg._id);
-  };
-
-  const startEdit = (msg) => {
-    setEditingId(msg._id);
-    setEditInput(msg.content);
-    setActiveMenu(null);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  };
-
-  const submitEdit = () => {
-    if (!editInput.trim()) return;
-    editMessage(editingId, editInput.trim());
-    setEditingId(null); setEditInput("");
-  };
-
+  const startEdit = (msg) => { setEditingId(msg._id); setEditInput(msg.content); setActiveMenu(null); };
+  const submitEdit = () => { if (!editInput.trim()) return; editMessage(editingId, editInput.trim()); setEditingId(null); setEditInput(""); };
   const cancelEdit = () => { setEditingId(null); setEditInput(""); };
-
-  const handleDelete = (id) => {
-    setActiveMenu(null);
-    setConfirmDelete(id);
-  };
+  const handleDelete = (id) => { setActiveMenu(null); setConfirmDelete(id); };
 
   return (
     <>
-      {/* Header */}
       <div className="thread-header">
         <button className="back-btn" onClick={onBack}><ArrowLeft size={20} /></button>
         <div className={`thread-avatar ${type === "group" ? "group-av" : ""}`}>
@@ -252,15 +214,11 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="messages-list" ref={listRef}>
+      <div className="messages-list">
         {loading ? (
           <div className="chat-loader"><Loader /></div>
         ) : messages.length === 0 ? (
-          <div className="chat-empty">
-            <MessageSquare size={36} />
-            <p>No messages yet. Say hello!</p>
-          </div>
+          <div className="chat-empty"><MessageSquare size={36} /><p>No messages yet. Say hello!</p></div>
         ) : (
           messages.map((msg, i) => {
             const isMe = msg.senderId?._id === myId || msg.senderId === myId;
@@ -272,147 +230,89 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
             const showDate = i === 0 || !isSameDay(messages[i - 1].createdAt, msg.createdAt);
             const showAvatar = !isMe && type === "group" &&
               (i === messages.length - 1 || messages[i + 1]?.senderId?._id !== msg.senderId?._id);
-
             return (
               <div key={msg._id}>
-                {showDate && (
-                  <div className="date-separator">
-                    <span>{formatDateSeparator(msg.createdAt)}</span>
-                  </div>
-                )}
+                {showDate && <div className="date-separator"><span>{formatDateSeparator(msg.createdAt)}</span></div>}
                 {msg.isSystem ? (
-                  <div className="system-msg-row">
-                    <span className="system-msg">{msg.content}</span>
-                  </div>
+                  <div className="system-msg-row"><span className="system-msg">{msg.content}</span></div>
                 ) : (
-                <div
-                  className={`msg-row ${isMe ? "me" : "other"}`}
-                >
-                  {!isMe && type === "group" && (
-                    <div className={`msg-avatar ${showAvatar ? "" : "invisible"}`}>
-                      {getInitials(msg.senderId?.name)}
-                    </div>
-                  )}
-
-                  <div className="msg-wrap">
-                    {!isMe && type === "group" && showAvatar && (
-                      <p className="msg-sender-name">{msg.senderId?.name}</p>
+                  <div className={`msg-row ${isMe ? "me" : "other"}`}>
+                    {!isMe && type === "group" && (
+                      <div className={`msg-avatar ${showAvatar ? "" : "invisible"}`}>{getInitials(msg.senderId?.name)}</div>
                     )}
-
-                    <div className="bubble-outer">
-                      {isMe && (
-                        <div className="msg-actions">
-                          <button className="msg-dots-btn" onClick={() => openCtx(msg)}>
-                            <MoreVertical size={15} />
-                          </button>
-                          {activeMenu === msg._id && (
-                            <ContextMenu
-                              onEdit={() => startEdit(msg)}
-                              onDelete={() => handleDelete(msg._id)}
-                              onClose={() => setActiveMenu(null)}
-                            />
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className={`message-bubble ${isMe ? "me" : "them"}`}
-                        onDoubleClick={() => isMe && startEdit(msg)}
-                      >
-                        {msg.mediaUrl && <MediaBubble msg={msg} />}
-                        {msg.content && <span className="message-text">{msg.content}</span>}
-                        <div className="bubble-footer">
-                          <span className="message-time">
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                          {msg.edited && <span className="edited-tag">edited</span>}
-                          {isMe && (
-                            <span className="seen-icon">
-                              {seenByAll
-                                ? <CheckCheck size={13} color="#4fc3f7" />
-                                : <CheckCheck size={13} color="#c4b5a5" />}
-                            </span>
-                          )}
+                    <div className="msg-wrap">
+                      {!isMe && type === "group" && showAvatar && <p className="msg-sender-name">{msg.senderId?.name}</p>}
+                      <div className="bubble-outer">
+                        {isMe && (
+                          <div className="msg-actions">
+                            <button className="msg-dots-btn" onClick={() => setActiveMenu((p) => p === msg._id ? null : msg._id)}><MoreVertical size={15} /></button>
+                            {activeMenu === msg._id && (
+                              <ContextMenu onEdit={() => startEdit(msg)} onDelete={() => handleDelete(msg._id)} onClose={() => setActiveMenu(null)} />
+                            )}
+                          </div>
+                        )}
+                        <div className={`message-bubble ${isMe ? "me" : "them"}`} onDoubleClick={() => isMe && startEdit(msg)}>
+                          {msg.mediaUrl && <MediaBubble msg={msg} />}
+                          {msg.content && <span className="message-text">{msg.content}</span>}
+                          <div className="bubble-footer">
+                            <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            {msg.edited && <span className="edited-tag">edited</span>}
+                            {isMe && <span className="seen-icon">{seenByAll ? <CheckCheck size={13} color="#4fc3f7" /> : <CheckCheck size={13} color="#c4b5a5" />}</span>}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 )}
               </div>
             );
           })
         )}
-
-        {typingUsers.length > 0 && (
-          <div className="msg-row other">
-            <div className="msg-avatar" />
-            <TypingBubble />
-          </div>
-        )}
+        {typingUsers.length > 0 && <div className="msg-row other"><div className="msg-avatar" /><TypingBubble /></div>}
         <div ref={bottomRef} />
       </div>
 
-      {/* Edit bar */}
       {editingId && (
         <div className="edit-bar">
-          <Pencil size={14} color="#ff7a18" />
-          <span>Editing message</span>
+          <Pencil size={14} color="#ff7a18" /><span>Editing message</span>
           <button className="edit-bar-cancel" onClick={cancelEdit}><X size={14} /></button>
         </div>
       )}
 
-      {/* Input */}
       {groupDeactivated ? (
-        <div className="group-closed-bar">
-          This session has been cancelled. This group is now closed.
-        </div>
+        <div className="group-closed-bar">This session has been cancelled. This group is now closed.</div>
       ) : (
-      <div className="message-input-area">
-        {mediaPreview && (
-          <div className="media-preview-bar">
-            {mediaPreview.type === "image" && <img src={mediaPreview.url} alt="preview" className="media-preview-thumb" />}
-            {mediaPreview.type === "video" && <Play size={16} />}
-            {mediaPreview.type === "pdf" && <FileText size={16} />}
-            <span className="media-preview-name">{mediaPreview.name}</span>
-            <button className="media-preview-remove" onClick={() => setMediaPreview(null)}><X size={14} /></button>
+        <div className="message-input-area">
+          {mediaPreview && (
+            <div className="media-preview-bar">
+              {mediaPreview.type === "image" && <img src={mediaPreview.url} alt="preview" className="media-preview-thumb" />}
+              {mediaPreview.type === "video" && <Play size={16} />}
+              {mediaPreview.type === "pdf" && <FileText size={16} />}
+              <span className="media-preview-name">{mediaPreview.name}</span>
+              <button className="media-preview-remove" onClick={() => setMediaPreview(null)}><X size={14} /></button>
+            </div>
+          )}
+          <div className="media-input-row">
+            <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf" style={{ display: "none" }} onChange={handleFileSelect} />
+            <button className="attach-btn" onClick={() => fileInputRef.current?.click()} title="Attach file"><Paperclip size={18} /></button>
+            <textarea
+              ref={inputRef}
+              className="message-input"
+              placeholder={editingId ? "Edit message..." : "Type a message"}
+              value={editingId ? editInput : input}
+              onChange={editingId ? (e) => setEditInput(e.target.value) : handleInputChange}
+              onKeyDown={editingId
+                ? (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") cancelEdit(); }
+                : handleKeyDown}
+              rows={1}
+            />
+            <button className="send-btn" onClick={editingId ? submitEdit : handleSend} disabled={uploading || (editingId ? !editInput.trim() : (!input.trim() && !mediaPreview))}>
+              {uploading ? <span className="upload-spinner" /> : <Send size={18} />}
+            </button>
           </div>
-        )}
-        <div className="media-input-row">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf"
-            style={{ display: "none" }}
-            onChange={handleFileSelect}
-          />
-          <button className="attach-btn" onClick={() => fileInputRef.current?.click()} title="Attach file">
-            <Paperclip size={18} />
-          </button>
-          <textarea
-            ref={inputRef}
-            className="message-input"
-            placeholder={editingId ? "Edit message..." : "Type a message"}
-            value={editingId ? editInput : input}
-            onChange={editingId
-              ? (e) => setEditInput(e.target.value)
-              : handleInputChange}
-            onKeyDown={editingId
-              ? (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") cancelEdit(); }
-              : handleKeyDown}
-            rows={1}
-          />
-          <button
-            className="send-btn"
-            onClick={editingId ? submitEdit : handleSend}
-            disabled={uploading || (editingId ? !editInput.trim() : (!input.trim() && !mediaPreview))}
-          >
-            {uploading ? <span className="upload-spinner" /> : <Send size={18} />}
-          </button>
         </div>
-      </div>
       )}
 
-      {/* Delete confirmation */}
       {confirmDelete && (
         <div className="confirm-overlay" onClick={() => setConfirmDelete(null)}>
           <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
@@ -429,8 +329,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────
-function MessagesPageInner() {
+function MessagesPageInner({ dmParam, dmName }) {
   const [tab, setTab] = useState("groups");
   const [groups, setGroups] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -438,12 +337,8 @@ function MessagesPageInner() {
   const [selected, setSelected] = useState(null);
   const [myId, setMyId] = useState(null);
   const [search, setSearch] = useState("");
-  // unread counts per conversation/group id
   const [unreadMap, setUnreadMap] = useState({});
   const { decrementUnread, setActiveConversation } = useMessages();
-  const searchParams = useSearchParams();
-  const dmParam = searchParams.get("dm");
-  const dmName = searchParams.get("name");
   const selectedRef = useRef(null);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
@@ -460,7 +355,6 @@ function MessagesPageInner() {
     return () => setActiveConversation(null);
   }, []);
 
-  // Auto-open DM when navigated from alumni card
   useEffect(() => {
     if (dmParam && !loading) {
       setTab("dms");
@@ -485,7 +379,6 @@ function MessagesPageInner() {
       const dData = await dRes.json();
       if (gData.success) {
         setGroups(gData.groups);
-        // Seed group unread counts
         const groupInitial = {};
         gData.groups.forEach((g) => { if (g.unread > 0) groupInitial[g._id] = g.unread; });
         setUnreadMap((prev) => ({ ...prev, ...groupInitial }));
@@ -493,9 +386,7 @@ function MessagesPageInner() {
       if (dData.success) {
         setConversations(dData.conversations);
         const dmInitial = {};
-        dData.conversations.forEach((c) => {
-          if (c.unread > 0) dmInitial[c._id] = c.unread;
-        });
+        dData.conversations.forEach((c) => { if (c.unread > 0) dmInitial[c._id] = c.unread; });
         setUnreadMap((prev) => ({ ...prev, ...dmInitial }));
       }
     } catch (err) {
@@ -505,23 +396,17 @@ function MessagesPageInner() {
     }
   };
 
-  // Live-update sidebar last message + unread counts
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
-
     const myIdNow = myId;
 
     const onGroupMsg = (msg) => {
       const gid = String(msg.groupId);
       setGroups((prev) =>
-        prev.map((g) =>
-          String(g._id) === gid
-            ? { ...g, lastMessage: msg, lastMessageAt: msg.createdAt }
-            : g
-        ).sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0))
+        prev.map((g) => String(g._id) === gid ? { ...g, lastMessage: msg, lastMessageAt: msg.createdAt } : g)
+          .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0))
       );
-      // Only count if not currently viewing this group and not my own message
       const senderId = String(msg.senderId?._id || msg.senderId);
       const isOpen = selectedRef.current?.type === "group" && String(selectedRef.current?.id) === gid;
       if (!isOpen && senderId !== String(myIdNow)) {
@@ -534,9 +419,7 @@ function MessagesPageInner() {
       const receiverId = String(msg.receiverId?._id || msg.receiverId);
       const partnerId = senderId === String(myIdNow) ? receiverId : senderId;
       setConversations((prev) =>
-        prev.map((c) =>
-          String(c._id) === partnerId ? { ...c, lastMessage: msg } : c
-        )
+        prev.map((c) => String(c._id) === partnerId ? { ...c, lastMessage: msg } : c)
       );
       const isOpen = selectedRef.current?.type === "direct" && String(selectedRef.current?.id) === partnerId;
       if (!isOpen && senderId !== String(myIdNow)) {
@@ -549,14 +432,8 @@ function MessagesPageInner() {
     return () => { socket.off("group:receive", onGroupMsg); socket.off("dm:receive", onDMMsg); };
   }, [myId]);
 
-  const filteredGroups = groups.filter((g) =>
-    g.name.toLowerCase().includes(search.toLowerCase())
-  );
-  const filteredDMs = conversations.filter((c) =>
-    c.user?.name?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Derive tab dot visibility directly from unreadMap
+  const filteredGroups = groups.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredDMs = conversations.filter((c) => c.user?.name?.toLowerCase().includes(search.toLowerCase()));
   const hasUnreadGroups = groups.some((g) => (unreadMap[g._id] || 0) > 0);
   const hasUnreadDMs = conversations.some((c) => (unreadMap[c._id] || 0) > 0);
 
@@ -585,18 +462,12 @@ function MessagesPageInner() {
   return (
     <div className="messages-page">
       <div className="messages-container">
-        {/* Left panel */}
         <div className={`contacts-panel ${selected ? "hidden-mobile" : ""}`}>
           <div className="contacts-header">
             <h2>Messages</h2>
             <div className="search-bar">
               <Search size={15} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+              <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="msg-tabs">
               <button className={`msg-tab ${tab === "groups" ? "active" : ""}`} onClick={() => setTab("groups")}>
@@ -609,17 +480,12 @@ function MessagesPageInner() {
               </button>
             </div>
           </div>
-
           <div className="contacts-list">
             {tab === "groups" && (
               filteredGroups.length === 0
                 ? <p className="empty-list">No groups yet. Register for a session to join one.</p>
                 : filteredGroups.map((g) => (
-                  <div
-                    key={g._id}
-                    className={`contact-item ${selected?.id === g._id ? "active" : ""}`}
-                    onClick={() => selectGroup(g)}
-                  >
+                  <div key={g._id} className={`contact-item ${selected?.id === g._id ? "active" : ""}`} onClick={() => selectGroup(g)}>
                     <div className="contact-avatar group-avatar"><Users size={15} /></div>
                     <div className="contact-info">
                       <p className="contact-name">{g.name}</p>
@@ -627,9 +493,7 @@ function MessagesPageInner() {
                     </div>
                     <div className="contact-meta">
                       <span className="contact-time">{formatTime(g.lastMessageAt)}</span>
-                      {unreadMap[g._id] > 0
-                        ? <span className="unread-dot">{unreadMap[g._id]}</span>
-                        : <span className="member-count">{g.members?.length} members</span>}
+                      {unreadMap[g._id] > 0 ? <span className="unread-dot">{unreadMap[g._id]}</span> : <span className="member-count">{g.members?.length} members</span>}
                     </div>
                   </div>
                 ))
@@ -638,11 +502,7 @@ function MessagesPageInner() {
               filteredDMs.length === 0
                 ? <p className="empty-list">No direct messages yet.</p>
                 : filteredDMs.map((c) => (
-                  <div
-                    key={c._id}
-                    className={`contact-item ${selected?.id === c._id ? "active" : ""}`}
-                    onClick={() => selectDM(c)}
-                  >
+                  <div key={c._id} className={`contact-item ${selected?.id === c._id ? "active" : ""}`} onClick={() => selectDM(c)}>
                     <div className="contact-avatar">{getInitials(c.user?.name)}</div>
                     <div className="contact-info">
                       <p className="contact-name">{c.user?.name}</p>
@@ -658,7 +518,6 @@ function MessagesPageInner() {
           </div>
         </div>
 
-        {/* Right panel */}
         <div className={`thread-panel ${selected ? "visible-mobile" : ""}`}>
           {!selected ? (
             <div className="thread-empty">
@@ -684,10 +543,15 @@ function MessagesPageInner() {
   );
 }
 
+function MessagesPageWithParams() {
+  const searchParams = useSearchParams();
+  return <MessagesPageInner dmParam={searchParams.get("dm")} dmName={searchParams.get("name")} />;
+}
+
 export default function MessagesPage() {
   return (
     <Suspense fallback={<Loader />}>
-      <MessagesPageInner />
+      <MessagesPageWithParams />
     </Suspense>
   );
 }
