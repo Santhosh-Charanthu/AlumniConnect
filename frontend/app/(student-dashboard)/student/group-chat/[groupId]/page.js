@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Send, Pencil, Trash2, Check, CheckCheck, ArrowLeft, Users, Paperclip, FileText, X } from "lucide-react";
-import { authFetch } from "../../../../../services/authFetch";
-import { connectSocket, getSocket } from "../../../../../lib/socket";
-import { useChat } from "../../../../../hooks/useChat";
+import { authFetch } from "../../../../../src/services/authFetch";
+import { connectSocket, getSocket } from "../../../../../src/lib/socket";
+import { useChat } from "../../../../../src/hooks/useChat";
 import Loader from "../../../../components/Loader";
 import "./group-chat.css";
 

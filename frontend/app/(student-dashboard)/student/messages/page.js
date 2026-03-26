@@ -1,18 +1,19 @@
 "use client";
 
-// Alumni messages page — same UI as student, just different import path for CSS
-import { useState, useEffect, useRef, useCallback } from "react";
+export const dynamic = "force-dynamic";
+
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Search, Send, ArrowLeft, MessageSquare, Users,
   Pencil, Trash2, CheckCheck, X, MoreVertical, Paperclip, FileText, Play
 } from "lucide-react";
-import { authFetch } from "../../../../services/authFetch";
-import { connectSocket, getSocket } from "../../../../lib/socket";
-import { useChat } from "../../../../hooks/useChat";
+import { authFetch } from "../../../../src/services/authFetch";
+import { connectSocket, getSocket } from "../../../../src/lib/socket";
+import { useChat } from "../../../../src/hooks/useChat";
 import { useMessages } from "../../../context/MessageContext";
 import Loader from "../../../components/Loader";
-// Reuse the same CSS
-import "../../../(student-dashboard)/student/messages/messages.css";
+import "./messages.css";
 
 const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
@@ -58,7 +59,6 @@ function TypingBubble() {
 
 async function downloadPdf(url, name) {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
   const proxyUrl = `${API}/chat/proxy-download?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name || "document.pdf")}`;
   try {
     const res = await fetch(proxyUrl, { headers: { Authorization: `Bearer ${token}` } });
@@ -87,11 +87,7 @@ function MediaBubble({ msg }) {
     );
   }
   if (msg.mediaType === "video") {
-    return (
-      <video controls className="media-video" src={msg.mediaUrl}>
-        Your browser does not support video.
-      </video>
-    );
+    return <video controls className="media-video" src={msg.mediaUrl}>Your browser does not support video.</video>;
   }
   if (msg.mediaType === "pdf") {
     return (
@@ -112,7 +108,6 @@ function ContextMenu({ onEdit, onDelete, onClose }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
-
   return (
     <div ref={ref} className="ctx-menu">
       <button onClick={onEdit}><Pencil size={13} /> Edit</button>
@@ -138,13 +133,10 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
   const { messages, loading, typingUsers, sendMessage, editMessage, deleteMessage, sendTyping } =
     useChat(type, targetId);
 
-  // Listen for group deactivation
   useEffect(() => {
     const socket = getSocket();
     if (!socket || type !== "group") return;
-    const onDeactivated = ({ groupId }) => {
-      if (groupId === targetId) setGroupDeactivated(true);
-    };
+    const onDeactivated = ({ groupId }) => { if (groupId === targetId) setGroupDeactivated(true); };
     socket.on("group:deactivated", onDeactivated);
     return () => socket.off("group:deactivated", onDeactivated);
   }, [targetId, type]);
@@ -167,9 +159,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
           body: formData,
         });
         const data = await res.json();
-        if (data.success) {
-          sendMessage(input.trim(), { url: data.url, type: data.mediaType, name: data.mediaName });
-        }
+        if (data.success) sendMessage(input.trim(), { url: data.url, type: data.mediaType, name: data.mediaName });
       } catch (e) { console.error(e); }
       finally { setUploading(false); }
       setMediaPreview(null);
@@ -189,8 +179,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
     let type = "image";
     if (mime.startsWith("video/")) type = "video";
     else if (mime === "application/pdf") type = "pdf";
-    const url = URL.createObjectURL(file);
-    setMediaPreview({ url, type, name: file.name, file });
+    setMediaPreview({ url: URL.createObjectURL(file), type, name: file.name, file });
     e.target.value = "";
   };
 
@@ -207,16 +196,8 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
   };
 
-  const openCtx = (msg) => {
-    setActiveMenu((prev) => prev === msg._id ? null : msg._id);
-  };
-
   const startEdit = (msg) => { setEditingId(msg._id); setEditInput(msg.content); setActiveMenu(null); };
-  const submitEdit = () => {
-    if (!editInput.trim()) return;
-    editMessage(editingId, editInput.trim());
-    setEditingId(null); setEditInput("");
-  };
+  const submitEdit = () => { if (!editInput.trim()) return; editMessage(editingId, editInput.trim()); setEditingId(null); setEditInput(""); };
   const cancelEdit = () => { setEditingId(null); setEditInput(""); };
   const handleDelete = (id) => { setActiveMenu(null); setConfirmDelete(id); };
 
@@ -237,10 +218,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
         {loading ? (
           <div className="chat-loader"><Loader /></div>
         ) : messages.length === 0 ? (
-          <div className="chat-empty">
-            <MessageSquare size={36} />
-            <p>No messages yet. Say hello!</p>
-          </div>
+          <div className="chat-empty"><MessageSquare size={36} /><p>No messages yet. Say hello!</p></div>
         ) : (
           messages.map((msg, i) => {
             const isMe = msg.senderId?._id === myId || msg.senderId === myId;
@@ -252,135 +230,87 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
             const showDate = i === 0 || !isSameDay(messages[i - 1].createdAt, msg.createdAt);
             const showAvatar = !isMe && type === "group" &&
               (i === messages.length - 1 || messages[i + 1]?.senderId?._id !== msg.senderId?._id);
-
             return (
               <div key={msg._id}>
-                {showDate && (
-                  <div className="date-separator">
-                    <span>{formatDateSeparator(msg.createdAt)}</span>
-                  </div>
-                )}
+                {showDate && <div className="date-separator"><span>{formatDateSeparator(msg.createdAt)}</span></div>}
                 {msg.isSystem ? (
-                  <div className="system-msg-row">
-                    <span className="system-msg">{msg.content}</span>
-                  </div>
+                  <div className="system-msg-row"><span className="system-msg">{msg.content}</span></div>
                 ) : (
-                <div className={`msg-row ${isMe ? "me" : "other"}`}>
-                  {!isMe && type === "group" && (
-                    <div className={`msg-avatar ${showAvatar ? "" : "invisible"}`}>
-                      {getInitials(msg.senderId?.name)}
-                    </div>
-                  )}
-                  <div className="msg-wrap">
-                    {!isMe && type === "group" && showAvatar && (
-                      <p className="msg-sender-name">{msg.senderId?.name}</p>
+                  <div className={`msg-row ${isMe ? "me" : "other"}`}>
+                    {!isMe && type === "group" && (
+                      <div className={`msg-avatar ${showAvatar ? "" : "invisible"}`}>{getInitials(msg.senderId?.name)}</div>
                     )}
-                    <div className="bubble-outer">
-                      {isMe && (
-                        <div className="msg-actions">
-                          <button className="msg-dots-btn" onClick={() => openCtx(msg)}>
-                            <MoreVertical size={15} />
-                          </button>
-                          {activeMenu === msg._id && (
-                            <ContextMenu
-                              onEdit={() => startEdit(msg)}
-                              onDelete={() => handleDelete(msg._id)}
-                              onClose={() => setActiveMenu(null)}
-                            />
-                          )}
-                        </div>
-                      )}
-                      <div
-                        className={`message-bubble ${isMe ? "me" : "them"}`}
-                        onDoubleClick={() => isMe && startEdit(msg)}
-                      >
-                        {msg.mediaUrl && <MediaBubble msg={msg} />}
-                        {msg.content && <span className="message-text">{msg.content}</span>}
-                        <div className="bubble-footer">
-                          <span className="message-time">
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                          {msg.edited && <span className="edited-tag">edited</span>}
-                          {isMe && (
-                            <span className="seen-icon">
-                              {seenByAll
-                                ? <CheckCheck size={13} color="#4fc3f7" />
-                                : <CheckCheck size={13} color="#c4b5a5" />}
-                            </span>
-                          )}
+                    <div className="msg-wrap">
+                      {!isMe && type === "group" && showAvatar && <p className="msg-sender-name">{msg.senderId?.name}</p>}
+                      <div className="bubble-outer">
+                        {isMe && (
+                          <div className="msg-actions">
+                            <button className="msg-dots-btn" onClick={() => setActiveMenu((p) => p === msg._id ? null : msg._id)}><MoreVertical size={15} /></button>
+                            {activeMenu === msg._id && (
+                              <ContextMenu onEdit={() => startEdit(msg)} onDelete={() => handleDelete(msg._id)} onClose={() => setActiveMenu(null)} />
+                            )}
+                          </div>
+                        )}
+                        <div className={`message-bubble ${isMe ? "me" : "them"}`} onDoubleClick={() => isMe && startEdit(msg)}>
+                          {msg.mediaUrl && <MediaBubble msg={msg} />}
+                          {msg.content && <span className="message-text">{msg.content}</span>}
+                          <div className="bubble-footer">
+                            <span className="message-time">{new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            {msg.edited && <span className="edited-tag">edited</span>}
+                            {isMe && <span className="seen-icon">{seenByAll ? <CheckCheck size={13} color="#4fc3f7" /> : <CheckCheck size={13} color="#c4b5a5" />}</span>}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 )}
               </div>
             );
           })
         )}
-        {typingUsers.length > 0 && (
-          <div className="msg-row other">
-            <div className="msg-avatar" />
-            <TypingBubble />
-          </div>
-        )}
+        {typingUsers.length > 0 && <div className="msg-row other"><div className="msg-avatar" /><TypingBubble /></div>}
         <div ref={bottomRef} />
       </div>
 
       {editingId && (
         <div className="edit-bar">
-          <Pencil size={14} color="#ff7a18" />
-          <span>Editing message</span>
+          <Pencil size={14} color="#ff7a18" /><span>Editing message</span>
           <button className="edit-bar-cancel" onClick={cancelEdit}><X size={14} /></button>
         </div>
       )}
 
       {groupDeactivated ? (
-        <div className="group-closed-bar">
-          This session has been cancelled. This group is now closed.
-        </div>
+        <div className="group-closed-bar">This session has been cancelled. This group is now closed.</div>
       ) : (
-      <div className="message-input-area">
-        {mediaPreview && (
-          <div className="media-preview-bar">
-            {mediaPreview.type === "image" && <img src={mediaPreview.url} alt="preview" className="media-preview-thumb" />}
-            {mediaPreview.type === "video" && <Play size={16} />}
-            {mediaPreview.type === "pdf" && <FileText size={16} />}
-            <span className="media-preview-name">{mediaPreview.name}</span>
-            <button className="media-preview-remove" onClick={() => setMediaPreview(null)}><X size={14} /></button>
+        <div className="message-input-area">
+          {mediaPreview && (
+            <div className="media-preview-bar">
+              {mediaPreview.type === "image" && <img src={mediaPreview.url} alt="preview" className="media-preview-thumb" />}
+              {mediaPreview.type === "video" && <Play size={16} />}
+              {mediaPreview.type === "pdf" && <FileText size={16} />}
+              <span className="media-preview-name">{mediaPreview.name}</span>
+              <button className="media-preview-remove" onClick={() => setMediaPreview(null)}><X size={14} /></button>
+            </div>
+          )}
+          <div className="media-input-row">
+            <input ref={fileInputRef} type="file" accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf" style={{ display: "none" }} onChange={handleFileSelect} />
+            <button className="attach-btn" onClick={() => fileInputRef.current?.click()} title="Attach file"><Paperclip size={18} /></button>
+            <textarea
+              ref={inputRef}
+              className="message-input"
+              placeholder={editingId ? "Edit message..." : "Type a message"}
+              value={editingId ? editInput : input}
+              onChange={editingId ? (e) => setEditInput(e.target.value) : handleInputChange}
+              onKeyDown={editingId
+                ? (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") cancelEdit(); }
+                : handleKeyDown}
+              rows={1}
+            />
+            <button className="send-btn" onClick={editingId ? submitEdit : handleSend} disabled={uploading || (editingId ? !editInput.trim() : (!input.trim() && !mediaPreview))}>
+              {uploading ? <span className="upload-spinner" /> : <Send size={18} />}
+            </button>
           </div>
-        )}
-        <div className="media-input-row">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/mp4,video/webm,video/quicktime,application/pdf"
-            style={{ display: "none" }}
-            onChange={handleFileSelect}
-          />
-          <button className="attach-btn" onClick={() => fileInputRef.current?.click()} title="Attach file">
-            <Paperclip size={18} />
-          </button>
-          <textarea
-            ref={inputRef}
-            className="message-input"
-            placeholder={editingId ? "Edit message..." : "Type a message"}
-            value={editingId ? editInput : input}
-            onChange={editingId ? (e) => setEditInput(e.target.value) : handleInputChange}
-            onKeyDown={editingId
-              ? (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submitEdit(); } if (e.key === "Escape") cancelEdit(); }
-              : handleKeyDown}
-            rows={1}
-          />
-          <button
-            className="send-btn"
-            onClick={editingId ? submitEdit : handleSend}
-            disabled={uploading || (editingId ? !editInput.trim() : (!input.trim() && !mediaPreview))}
-          >
-            {uploading ? <span className="upload-spinner" /> : <Send size={18} />}
-          </button>
         </div>
-      </div>
       )}
 
       {confirmDelete && (
@@ -399,7 +329,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
   );
 }
 
-export default function AlumniMessagesPage() {
+function MessagesPageInner({ dmParam, dmName }) {
   const [tab, setTab] = useState("groups");
   const [groups, setGroups] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -425,6 +355,20 @@ export default function AlumniMessagesPage() {
     return () => setActiveConversation(null);
   }, []);
 
+  useEffect(() => {
+    if (dmParam && !loading) {
+      setTab("dms");
+      const existing = conversations.find((c) => String(c._id) === String(dmParam));
+      if (existing) {
+        selectDM(existing);
+      } else {
+        setSelected({ type: "direct", id: dmParam, name: dmName || "Alumni", meta: "Alumni" });
+        selectedRef.current = { type: "direct", id: dmParam };
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dmParam, loading]);
+
   const loadData = async () => {
     try {
       const [gRes, dRes] = await Promise.all([
@@ -442,9 +386,7 @@ export default function AlumniMessagesPage() {
       if (dData.success) {
         setConversations(dData.conversations);
         const dmInitial = {};
-        dData.conversations.forEach((c) => {
-          if (c.unread > 0) dmInitial[c._id] = c.unread;
-        });
+        dData.conversations.forEach((c) => { if (c.unread > 0) dmInitial[c._id] = c.unread; });
         setUnreadMap((prev) => ({ ...prev, ...dmInitial }));
       }
     } catch (err) {
@@ -462,11 +404,8 @@ export default function AlumniMessagesPage() {
     const onGroupMsg = (msg) => {
       const gid = String(msg.groupId);
       setGroups((prev) =>
-        prev.map((g) =>
-          String(g._id) === gid
-            ? { ...g, lastMessage: msg, lastMessageAt: msg.createdAt }
-            : g
-        ).sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0))
+        prev.map((g) => String(g._id) === gid ? { ...g, lastMessage: msg, lastMessageAt: msg.createdAt } : g)
+          .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0))
       );
       const senderId = String(msg.senderId?._id || msg.senderId);
       const isOpen = selectedRef.current?.type === "group" && String(selectedRef.current?.id) === gid;
@@ -478,12 +417,9 @@ export default function AlumniMessagesPage() {
     const onDMMsg = (msg) => {
       const senderId = String(msg.senderId?._id || msg.senderId);
       const receiverId = String(msg.receiverId?._id || msg.receiverId);
-      // The conversation partner is whoever is NOT me
       const partnerId = senderId === String(myIdNow) ? receiverId : senderId;
       setConversations((prev) =>
-        prev.map((c) =>
-          String(c._id) === partnerId ? { ...c, lastMessage: msg } : c
-        )
+        prev.map((c) => String(c._id) === partnerId ? { ...c, lastMessage: msg } : c)
       );
       const isOpen = selectedRef.current?.type === "direct" && String(selectedRef.current?.id) === partnerId;
       if (!isOpen && senderId !== String(myIdNow)) {
@@ -496,6 +432,11 @@ export default function AlumniMessagesPage() {
     return () => { socket.off("group:receive", onGroupMsg); socket.off("dm:receive", onDMMsg); };
   }, [myId]);
 
+  const filteredGroups = groups.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredDMs = conversations.filter((c) => c.user?.name?.toLowerCase().includes(search.toLowerCase()));
+  const hasUnreadGroups = groups.some((g) => (unreadMap[g._id] || 0) > 0);
+  const hasUnreadDMs = conversations.some((c) => (unreadMap[c._id] || 0) > 0);
+
   const selectGroup = (g) => {
     const id = g._id;
     const count = unreadMap[id] || 0;
@@ -505,6 +446,7 @@ export default function AlumniMessagesPage() {
     setSelected({ type: "group", id, name: g.name, meta: `${g.members?.length} members`, totalMembers: g.members?.length || 0, isActive: g.isActive !== false });
     selectedRef.current = { type: "group", id };
   };
+
   const selectDM = (c) => {
     const id = c._id;
     const count = unreadMap[id] || 0;
@@ -514,13 +456,6 @@ export default function AlumniMessagesPage() {
     setSelected({ type: "direct", id, name: c.user?.name, meta: c.user?.role || "Member" });
     selectedRef.current = { type: "direct", id };
   };
-
-  const filteredGroups = groups.filter((g) => g.name.toLowerCase().includes(search.toLowerCase()));
-  const filteredDMs = conversations.filter((c) => c.user?.name?.toLowerCase().includes(search.toLowerCase()));
-
-  // Derive tab dot visibility directly from unreadMap
-  const hasUnreadGroups = groups.some((g) => (unreadMap[g._id] || 0) > 0);
-  const hasUnreadDMs = conversations.some((c) => (unreadMap[c._id] || 0) > 0);
 
   if (loading) return <Loader />;
 
@@ -545,11 +480,10 @@ export default function AlumniMessagesPage() {
               </button>
             </div>
           </div>
-
           <div className="contacts-list">
             {tab === "groups" && (
               filteredGroups.length === 0
-                ? <p className="empty-list">No groups yet. Create a session to get started.</p>
+                ? <p className="empty-list">No groups yet. Register for a session to join one.</p>
                 : filteredGroups.map((g) => (
                   <div key={g._id} className={`contact-item ${selected?.id === g._id ? "active" : ""}`} onClick={() => selectGroup(g)}>
                     <div className="contact-avatar group-avatar"><Users size={15} /></div>
@@ -559,9 +493,7 @@ export default function AlumniMessagesPage() {
                     </div>
                     <div className="contact-meta">
                       <span className="contact-time">{formatTime(g.lastMessageAt)}</span>
-                      {unreadMap[g._id] > 0
-                        ? <span className="unread-dot">{unreadMap[g._id]}</span>
-                        : <span className="member-count">{g.members?.length} members</span>}
+                      {unreadMap[g._id] > 0 ? <span className="unread-dot">{unreadMap[g._id]}</span> : <span className="member-count">{g.members?.length} members</span>}
                     </div>
                   </div>
                 ))
@@ -608,5 +540,18 @@ export default function AlumniMessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function MessagesPageWithParams() {
+  const searchParams = useSearchParams();
+  return <MessagesPageInner dmParam={searchParams.get("dm")} dmName={searchParams.get("name")} />;
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <MessagesPageWithParams />
+    </Suspense>
   );
 }

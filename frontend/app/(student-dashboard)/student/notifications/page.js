@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Calendar, MessageSquare, CheckCheck, Users, ExternalLink, Radio, Star } from "lucide-react";
-import { authFetch } from "../../../../services/authFetch";
+import { authFetch } from "../../../../src/services/authFetch";
 import { useNotifications } from "../../../context/NotificationContext";
 import { useRouter } from "next/navigation";
 import Loader from "../../../components/Loader";

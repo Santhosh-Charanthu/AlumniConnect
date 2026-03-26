@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { authFetch } from "../../../../services/authFetch";
+import { authFetch } from "../../../../src/services/authFetch";
 import AlumniCard from "../../../components/AlumniCard";
 import { Search, SlidersHorizontal, Users } from "lucide-react";
 import "./explore-alumni.css";

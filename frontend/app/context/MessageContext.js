@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { connectSocket } from "../../lib/socket";
+import { connectSocket } from "../../src/lib/socket";
 
 const MessageContext = createContext({
   unreadMessages: 0,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, Users, ChevronRight, CheckCircle } from "lucide-react";
-import { authFetch } from "../../../../services/authFetch";
+import { authFetch } from "../../../../src/services/authFetch";
 import "./explore-sessions.css";
 import Loader from "../../../components/Loader";
 

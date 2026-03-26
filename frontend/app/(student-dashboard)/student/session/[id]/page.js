@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Calendar, Clock, Users, Tag, CheckCircle } from "lucide-react";
-import { authFetch } from "../../../../../services/authFetch";
+import { authFetch } from "../../../../../src/services/authFetch";
 import "../../explore-sessions/explore-sessions.css";
-import Loader from "../../../../../app/components/Loader";
+import Loader from "../../../../components/Loader";
 
 export default function SessionDetailPage() {
   const { id } = useParams();

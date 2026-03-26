@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Star, Calendar, Clock, Users, MessageSquare } from "lucide-react";
-import "../../../../../app/(dashboard)/alumni/profile/profile.css";
+import "../../../../(dashboard)/alumni/profile/profile.css";
 import "./alumni-profile.css";
-import Loader from "../../../../../app/components/Loader";
+import Loader from "../../../../components/Loader";
 
 export default function StudentAlumniProfilePage() {
   const { id } = useParams();

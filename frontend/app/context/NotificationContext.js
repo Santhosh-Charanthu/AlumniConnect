@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import { connectSocket, getSocket } from "../../lib/socket";
+import { connectSocket, getSocket } from "../../src/lib/socket";
 
 const NotificationContext = createContext({ unreadCount: 0, setUnreadCount: () => {}, refreshUnread: () => {} });
 
