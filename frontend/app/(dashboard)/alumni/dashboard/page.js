@@ -130,49 +130,34 @@ export default function DashboardPage() {
           <p>No sessions found</p>
         ) : (
           displaySessions.map((session) => (
-            <div key={session._id} className="webinar-card">
+            <div
+              key={session._id}
+              className="webinar-card"
+              style={{ cursor: "pointer" }}
+              onClick={() => router.push(`/alumni/my-sessions?highlight=${session._id}`)}
+            >
               <h3>{session.title}</h3>
 
               <div className="info">
                 <div>
                   <p>Date:</p>
-                  <span>
-                    {new Date(session.startTime).toLocaleDateString()}
-                  </span>
+                  <span>{new Date(session.startTime).toLocaleDateString()}</span>
                 </div>
-
                 <div>
                   <p>Time:</p>
-                  <span>
-                    {new Date(session.startTime).toLocaleTimeString()}
-                  </span>
+                  <span>{new Date(session.startTime).toLocaleTimeString()}</span>
                 </div>
               </div>
 
               <div className="info">
                 <div>
                   <p>Enrollments:</p>
-                  <span className="orange-text">
-                    {session.currentSeats || 0} students
-                  </span>
+                  <span className="orange-text">{session.currentSeats || 0} students</span>
                 </div>
-
                 <div>
                   <p>Status:</p>
                   <span className="green-text">{session.status}</span>
                 </div>
-              </div>
-
-              <div className="card-actions">
-                <button
-                  onClick={() => router.push(`/edit-session/${session._id}`)}
-                >
-                  Edit
-                </button>
-
-                <button className="primary">
-                  {activeTab === "upcoming" ? "Start Session" : "View"}
-                </button>
               </div>
             </div>
           ))

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import "../../styles/Toast.css";
+import "../../src/styles/Toast.css";
 
 const ICONS = {
   success: "✔",

@@ -1,6 +1,6 @@
 "use client";
 
-// Alumni messages page — same UI as student, just different import path for CSS
+// Alumni messages page - same UI as student, just different import path for CSS
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Search, Send, ArrowLeft, MessageSquare, Users,
@@ -98,7 +98,7 @@ function MediaBubble({ msg }) {
       <button onClick={() => downloadPdf(msg.mediaUrl, msg.mediaName)} className="media-pdf">
         <FileText size={18} />
         <span>{msg.mediaName || "Document"}</span>
-        <span className="media-pdf-dl">↓ Download</span>
+        <span className="media-pdf-dl">? Download</span>
       </button>
     );
   }
@@ -555,7 +555,7 @@ export default function AlumniMessagesPage() {
                     <div className="contact-avatar group-avatar"><Users size={15} /></div>
                     <div className="contact-info">
                       <p className="contact-name">{g.name}</p>
-                      <p className="contact-preview">{g.lastMessage?.content || (g.lastMessage?.mediaType === "image" ? "📷 Photo" : g.lastMessage?.mediaType === "video" ? "🎥 Video" : g.lastMessage?.mediaType === "pdf" ? "📄 Document" : "No messages yet")}</p>
+                      <p className="contact-preview">{g.lastMessage?.content || (g.lastMessage?.mediaType === "image" ? "?? Photo" : g.lastMessage?.mediaType === "video" ? "?? Video" : g.lastMessage?.mediaType === "pdf" ? "?? Document" : "No messages yet")}</p>
                     </div>
                     <div className="contact-meta">
                       <span className="contact-time">{formatTime(g.lastMessageAt)}</span>
@@ -574,7 +574,7 @@ export default function AlumniMessagesPage() {
                     <div className="contact-avatar">{getInitials(c.user?.name)}</div>
                     <div className="contact-info">
                       <p className="contact-name">{c.user?.name}</p>
-                      <p className="contact-preview">{c.lastMessage?.content || (c.lastMessage?.mediaType === "image" ? "📷 Photo" : c.lastMessage?.mediaType === "video" ? "🎥 Video" : c.lastMessage?.mediaType === "pdf" ? "📄 Document" : "")}</p>
+                      <p className="contact-preview">{c.lastMessage?.content || (c.lastMessage?.mediaType === "image" ? "?? Photo" : c.lastMessage?.mediaType === "video" ? "?? Video" : c.lastMessage?.mediaType === "pdf" ? "?? Document" : "")}</p>
                     </div>
                     <div className="contact-meta">
                       <span className="contact-time">{formatTime(c.lastMessage?.createdAt)}</span>

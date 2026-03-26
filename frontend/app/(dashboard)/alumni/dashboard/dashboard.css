@@ -96,6 +96,14 @@
   border-radius: 12px;
   padding: 20px;
   border: 1px solid #eee;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.webinar-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: #ff7a00;
 }
 
 .webinar-card h3 {

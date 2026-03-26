@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useMessages } from "../context/MessageContext";
-import "../../styles/Sidebar.css";
+import "../../src/styles/Sidebar.css";
 
 export default function StudentSidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();

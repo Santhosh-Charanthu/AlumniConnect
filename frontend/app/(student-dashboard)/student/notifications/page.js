@@ -180,7 +180,7 @@ export default function NotificationsPage() {
                   {isGroupInvite && (
                     <div className="notif-actions">
                       {alreadyJoined ? (
-                        <span className="joined-badge">✓ Joined</span>
+                        <span className="joined-badge">? Joined</span>
                       ) : (
                         <button
                           className="join-group-btn"

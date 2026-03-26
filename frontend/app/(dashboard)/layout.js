@@ -5,9 +5,9 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { NotificationProvider } from "../context/NotificationContext";
 import { MessageProvider } from "../context/MessageContext";
-import "../../styles/Sidebar.css";
-import "../../styles/Navbar.css";
-import "../../styles/Layout.css";
+import "../../src/styles/Sidebar.css";
+import "../../src/styles/Navbar.css";
+import "../../src/styles/Layout.css";
 
 export default function DashboardLayout({ children }) {
   const [isOpen, setIsOpen] = useState(false);

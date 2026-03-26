@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Loader from "../../../components/Loader";
 import { useToast } from "../../../context/ToastContext";
 import {
@@ -12,6 +13,17 @@ import "./my-sessions.css";
 const API_BASE = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
 export default function MySessionsPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <MySessionsPageInner />
+    </Suspense>
+  );
+}
+
+function MySessionsPageInner() {
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+  const highlightRef = useRef(null);
   const { showToast } = useToast();
   const [sessions, setSessions] = useState([]);
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -36,6 +48,13 @@ export default function MySessionsPage() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => { fetchSessions(); }, []);
+
+  // Scroll to highlighted card after sessions load
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightId, sessions]);
 
   const fetchSessions = async () => {
     try {
@@ -260,7 +279,11 @@ export default function MySessionsPage() {
       ) : (
         <div className="sessions-grid">
           {displaySessions.map((session) => (
-            <div key={session._id} className="session-card">
+            <div
+              key={session._id}
+              ref={session._id === highlightId ? highlightRef : null}
+              className={`session-card${session._id === highlightId ? " session-card--highlight" : ""}`}
+            >
               {session.coverImage ? (
                 <img src={session.coverImage.url} alt={session.title} className="session-cover" />
               ) : (

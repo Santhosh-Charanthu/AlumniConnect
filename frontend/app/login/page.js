@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "../register/register.module.css"; // 👈 reuse same CSS
+import styles from "../register/register.module.css"; // ?? reuse same CSS
 import { useState } from "react";
 import { loginUser } from "../../src/services/api";
 import { useRouter } from "next/navigation";
@@ -25,13 +25,13 @@ export default function LoginPage() {
     try {
       const res = await loginUser({ ...form, role });
 
-      // ❌ login failed (no token)
+      // ? login failed (no token)
       if (!res.token || !res.user) {
         showToast("error", res.message || "Invalid credentials");
         return;
       }
 
-      // ✅ login success
+      // ? login success
       localStorage.setItem("token", res.token);
 
       showToastAfterRedirect("success", res.message || "Login successful");

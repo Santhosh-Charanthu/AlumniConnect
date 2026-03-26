@@ -1,5 +1,5 @@
 "use client";
-import styles from "@/app/register/register.module.css";
+import styles from "../../register/register.module.css";
 import { useEffect, useState } from "react";
 
 export default function AlumniForm({

@@ -97,7 +97,7 @@ function SessionCard({ session, onClick }) {
         </div>
 
         <div className="es-card-footer">
-          <span className="es-price">{session.price === 0 ? "Free" : `₹${session.price}`}</span>
+          <span className="es-price">{session.price === 0 ? "Free" : `?${session.price}`}</span>
           <span className="es-view-btn">View Details <ChevronRight size={14} /></span>
         </div>
       </div>

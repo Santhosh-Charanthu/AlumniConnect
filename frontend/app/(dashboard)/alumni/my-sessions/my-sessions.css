@@ -404,7 +404,6 @@
   gap: 5px;
   padding: 7px 14px;
   border-radius: 8px;
-  border: none;
   background: #16a34a;
   color: #fff;
   font-size: 13px;
@@ -823,4 +822,15 @@
 .alumni-review-date {
   font-size: 11px;
   color: #9ca3af;
+}
+
+/* Highlighted card (navigated from dashboard) */
+.session-card--highlight {
+  animation: highlightPulse 2.5s ease-out forwards;
+}
+
+@keyframes highlightPulse {
+  0%   { outline: 2px solid #ff7a00; box-shadow: 0 0 0 6px rgba(255, 122, 0, 0.35); }
+  60%  { outline: 2px solid #ff7a00; box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.15); }
+  100% { outline: 2px solid transparent; box-shadow: none; }
 }

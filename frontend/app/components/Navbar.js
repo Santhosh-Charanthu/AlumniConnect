@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
-import "../../styles/Navbar.css";
+import "../../src/styles/Navbar.css";
 
 export default function Navbar({ setIsOpen }) {
   return (
