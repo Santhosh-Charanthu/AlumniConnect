@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Search, Send, ArrowLeft, MessageSquare, Users,
@@ -431,7 +430,7 @@ function ChatPanel({ type, targetId, targetName, targetMeta, totalMembers = 2, m
 }
 
 // ── Main page ─────────────────────────────────────────────────
-export default function MessagesPage() {
+function MessagesPageInner() {
   const [tab, setTab] = useState("groups");
   const [groups, setGroups] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -682,5 +681,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <MessagesPageInner />
+    </Suspense>
   );
 }
