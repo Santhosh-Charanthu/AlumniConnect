@@ -2,7 +2,7 @@
 
 import styles from "../register/register.module.css"; // ?? reuse same CSS
 import { useState } from "react";
-import { loginUser } from "../../src/services/api";
+import { loginUser } from "../src/services/api";
 import { useRouter } from "next/navigation";
 import { useToast } from "../context/ToastContext";
 import Link from "next/link";

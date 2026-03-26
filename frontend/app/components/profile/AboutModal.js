@@ -1,5 +1,5 @@
 "use client";
-import "../../../styles/AboutModal.css";
+import "../../../src/styles/AboutModal.css";
 
 export default function AboutModal({
   isOpen,

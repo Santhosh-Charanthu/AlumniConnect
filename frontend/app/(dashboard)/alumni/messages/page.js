@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // Alumni messages page - same UI as student, just different import path for CSS
 import { useState, useEffect, useRef, useCallback } from "react";

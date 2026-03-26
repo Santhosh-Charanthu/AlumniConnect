@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import "../../../styles/ExperienceModal.css";
+import "../../../src/styles/ExperienceModal.css";
 
 export default function ExperienceModal({ isOpen, onClose, onSave }) {
   const [form, setForm] = useState({

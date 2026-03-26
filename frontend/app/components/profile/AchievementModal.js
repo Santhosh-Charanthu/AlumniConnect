@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import "../../../styles/AchievementModal.css";
+import "../../../src/styles/AchievementModal.css";
 
 export default function AchievementModal({ isOpen, onClose, onSave }) {
   const [form, setForm] = useState({

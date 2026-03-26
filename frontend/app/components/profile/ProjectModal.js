@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import "../../../styles/ProjectModal.css";
+import "../../../src/styles/ProjectModal.css";
 
 export default function ProjectModal({ isOpen, onClose, onSave }) {
   const [form, setForm] = useState({
