@@ -12,7 +12,7 @@ import { useChat } from "../../../../hooks/useChat";
 import { useMessages } from "../../../context/MessageContext";
 import Loader from "../../../components/Loader";
 import "./messages.css";
-
+export const dynamic = "force-dynamic";
 const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
 function getInitials(name = "") {
