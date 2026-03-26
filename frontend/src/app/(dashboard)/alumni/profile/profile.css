@@ -1,30 +1,65 @@
-/* PAGE WRAPPER */
+/* ── LOADER ── */
+.profile-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+}
+
+.loader-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #ffe2cc;
+  border-top-color: #ff7a18;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader-text {
+  font-size: 14px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ── PAGE WRAPPER ── */
 .profile-wrapper {
   background: #fff6ef;
   min-height: 100vh;
-  padding: 40px 20px;
+  padding: 20px 0;
+  margin: -16px;
 }
 
-/* CENTER CONTAINER */
+/* ── CENTER CONTAINER ── */
 .profile-container {
   max-width: 1100px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
-/* HERO */
+/* ── HERO ── */
 .profile-hero {
   display: flex;
   gap: 30px;
   background: white;
   padding: 30px;
-  overflow: hidden; /* safety net */
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.hero-left {
+  flex-shrink: 0;
 }
 
 .hero-right {
   flex: 1;
-  min-width: 0; /* 🔥 CRITICAL: allows text to shrink */
+  min-width: 0;
 }
 
 .avatar {
@@ -37,48 +72,99 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: fit-content;
+}
+
+.avatar-img {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.edit-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.edit-icon:hover {
+  transform: scale(1.05);
 }
 
 .hero-right h1 {
   margin: 0;
   font-size: 32px;
+  word-break: break-word;
 }
 
 .hero-right h3 {
   margin: 6px 0;
   font-weight: 500;
+  word-break: break-word;
 }
 
 .meta {
   color: #555;
+  font-size: 14px;
+  word-break: break-word;
 }
 
-/* BADGES */
+.bio {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-stats {
+  margin-top: 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* ── BADGES ── */
 .badges {
   margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .badge {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 13px;
-  margin-right: 8px;
 }
 
-.green {
-  background: #dcfce7;
-  color: #166534;
-}
-.blue {
-  background: #e0f2fe;
-  color: #075985;
-}
-.orange {
-  background: #fff0e6;
-  color: #ff7a18;
-}
+.green  { background: #dcfce7; color: #166534; }
+.blue   { background: #e0f2fe; color: #075985; }
+.orange { background: #fff0e6; color: #ff7a18; }
 
-/* BUTTONS */
+/* ── BUTTONS ── */
 .actions {
   margin-top: 16px;
   display: flex;
@@ -91,27 +177,35 @@
   border-radius: 8px;
   border: none;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.primary {
-  background: #ff7a18;
-  color: white;
+.btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
 }
 
-.secondary {
-  background: #ffe2cc;
-  color: #ff7a18;
-}
+.primary   { background: #ff7a18; color: white; }
+.secondary { background: #ffe2cc; color: #ff7a18; }
+.ghost     { background: #f2f2f2; color: #333; }
 
-.ghost {
-  background: #f2f2f2;
-}
-
-/* TABS */
+/* ── TABS ── */
 .profile-tabs {
+  position: relative;
+  margin: 28px 0 20px;
+}
+
+/* Desktop: pill row */
+.tabs-desktop {
   display: flex;
-  gap: 12px;
-  margin: 30px 0 20px;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+
+/* Mobile dropdown: hidden by default */
+.tabs-mobile {
+  display: none;
 }
 
 .tab {
@@ -121,6 +215,9 @@
   background: #eee;
   cursor: pointer;
   text-transform: capitalize;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .tab.active {
@@ -128,35 +225,62 @@
   color: white;
 }
 
-.quick-stats {
-  margin-top: 10px;
-  color: #666;
+/* Dropdown trigger button */
+.tab-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #ff7a18;
+  background: white;
+  color: #ff7a18;
   font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+  cursor: pointer;
 }
 
-.bio {
-  margin-top: 8px;
-  font-size: 14px;
-  color: #555;
-  line-height: 1.5;
-
-  /* 🔒 Prevent overflow */
-  max-width: 100%;
-  display: -webkit-box;
-  -webkit-line-clamp: 3; /* 👈 change to 2 if you want */
-  -webkit-box-orient: vertical;
+/* Dropdown menu */
+.tab-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.avatar-img {
-  border-radius: 50%; /* Perfect circle */
-  object-fit: cover; /* Crop image nicely */
-  border: 4px solid #fff; /* Clean white border */
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); /* Soft shadow */
+.tab-dropdown-item {
+  width: 100%;
+  display: block;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: capitalize;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.15s;
 }
 
-/* CONTENT */
+.tab-dropdown-item:hover {
+  background: #fff3e8;
+}
+
+.tab-dropdown-item.active {
+  background: #ff7a18;
+  color: white;
+}
+
+/* ── CONTENT CARDS ── */
 .profile-content {
   display: flex;
   flex-direction: column;
@@ -173,25 +297,51 @@
 .card-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.skill-row span {
-  background: #fff0e6;
-  color: #ff7a18;
-  padding: 6px 12px;
-  border-radius: 16px;
-  margin-right: 8px;
+.card-header h3 {
+  margin: 0;
+  word-break: break-word;
+}
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .about-text {
   font-size: 15px;
   color: #444;
   line-height: 1.7;
-
   word-break: break-word;
   overflow-wrap: anywhere;
 }
 
+/* ── SKILL ROW (tech stack) ── */
+.skill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.skill-row span {
+  background: #fff0e6;
+  color: #ff7a18;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+/* ── EMPTY STATE ── */
 .empty-state {
   text-align: center;
   padding: 30px 20px;
@@ -208,28 +358,17 @@
   margin-bottom: 16px;
 }
 
-.about-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.btn.small {
-  padding: 6px 12px;
-  font-size: 13px;
-}
-
 .add-center {
   display: flex;
   justify-content: center;
   margin-top: 20px;
 }
 
+/* ── PROJECT ACTIONS ── */
 .project-actions {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -242,38 +381,20 @@
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
-/* Live Demo */
-.action-btn.demo {
-  background: #e0f2fe;
-  color: #0369a1;
-}
+.action-btn.demo        { background: #e0f2fe; color: #0369a1; }
+.action-btn.demo:hover  { background: #bae6fd; }
+.action-btn.github      { background: #f3f4f6; color: #111827; }
+.action-btn.github:hover{ background: #e5e7eb; }
+.action-btn svg         { display: block; flex-shrink: 0; }
 
-.action-btn.demo:hover {
-  background: #bae6fd;
-}
-
-/* GitHub */
-.action-btn.github {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.action-btn.github:hover {
-  background: #e5e7eb;
-}
-
-.action-btn svg {
-  display: block;
-}
-
-/* SKILLS TAB */
+/* ── SKILLS GRID ── */
 .skills-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
 }
 
 .skill-chip {
@@ -284,79 +405,175 @@
   white-space: nowrap;
 }
 
-/* Color variants */
-.color-0 {
-  background: #e0f2fe;
-  color: #075985;
-}
+.color-0 { background: #e0f2fe; color: #075985; }
+.color-1 { background: #dcfce7; color: #166534; }
+.color-2 { background: #fef3c7; color: #92400e; }
+.color-3 { background: #ede9fe; color: #5b21b6; }
+.color-4 { background: #ffe4e6; color: #9f1239; }
+.color-5 { background: #fff0e6; color: #ff7a18; }
 
-.color-1 {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.color-2 {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.color-3 {
-  background: #ede9fe;
-  color: #5b21b6;
-}
-
-.color-4 {
-  background: #ffe4e6;
-  color: #9f1239;
-}
-
-.color-5 {
-  background: #fff0e6;
+/* certificate link */
+.certificate-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 13px;
   color: #ff7a18;
+  text-decoration: underline;
 }
 
-/* RESPONSIVE */
-@media (max-width: 600px) {
+/* ════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ════════════════════════════════ */
+
+/* Tablet — switch to dropdown */
+@media (max-width: 823px) {
+  .profile-wrapper {
+    padding: 14px 0;
+    margin: -16px;
+  }
+
   .profile-hero {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    padding: 24px 20px;
+    gap: 18px;
   }
+
+  .hero-right h1 { font-size: 26px; }
+
+  .badges  { justify-content: center; }
+  .actions { justify-content: center; }
+
+  .tabs-desktop { display: none; }
+  .tabs-mobile  { display: block; }
+
+  .profile-tabs { margin: 22px 0 16px; }
 }
 
-.avatar-wrapper {
-  position: relative;
-  width: fit-content;
+/* Large mobile */
+@media (max-width: 540px) {
+  .profile-wrapper { padding: 14px 0; margin: -10px; }
+  .profile-container { padding: 0 14px; }
+
+  .profile-hero {
+    padding: 18px 16px;
+    border-radius: 12px;
+    gap: 14px;
+  }
+
+  .avatar { width: 90px; height: 90px; font-size: 28px; }
+  .hero-right h1 { font-size: 22px; }
+  .hero-right h3 { font-size: 14px; }
+  .meta          { font-size: 13px; }
+
+  .content-card  { padding: 18px; }
+  .about-text    { font-size: 14px; }
+  .skill-chip    { padding: 8px 14px; font-size: 13px; }
+  .empty-state h3{ font-size: 16px; }
 }
 
-.avatar-img {
-  border-radius: 50%;
-  border: 4px solid white;
+/* Small mobile */
+@media (max-width: 420px) {
+  .profile-wrapper { padding: 10px 0; margin: -10px; }
+  .profile-container { padding: 0 10px; }
+
+  .profile-hero { padding: 14px 12px; gap: 12px; }
+
+  .avatar    { width: 78px; height: 78px; font-size: 24px; }
+  .edit-icon { width: 26px; height: 26px; }
+
+  .hero-right h1 { font-size: 19px; }
+  .hero-right h3 { font-size: 13px; }
+
+  .badge { font-size: 12px; padding: 5px 10px; }
+  .btn   { padding: 9px 14px; font-size: 13px; }
+
+  .content-card  { padding: 14px; border-radius: 10px; }
+  .card-header h3{ font-size: 15px; }
+  .action-btn    { padding: 7px 12px; font-size: 13px; }
+  .skill-chip    { padding: 7px 12px; font-size: 12px; }
+
+  .tab-dropdown-trigger { padding: 10px 14px; font-size: 13px; }
+  .tab-dropdown-item    { padding: 11px 14px; font-size: 13px; }
 }
 
-/* Floating pencil button */
-.edit-icon {
-  position: absolute;
-  bottom: 0;
-  right: 0;
+/* Very small — 360px */
+@media (max-width: 360px) {
+  .profile-wrapper { padding: 8px 0; margin: -10px; }
+  .profile-container { padding: 0 8px; }
 
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  .profile-hero {
+    padding: 12px 10px;
+    border-radius: 10px;
+    gap: 10px;
+  }
 
-  background: #f1f1f1;
-  border: none;
-  cursor: pointer;
+  .avatar    { width: 68px; height: 68px; font-size: 20px; }
+  .edit-icon { width: 24px; height: 24px; }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  .hero-right h1 { font-size: 17px; }
+  .hero-right h3 { font-size: 12px; margin: 4px 0; }
+  .meta          { font-size: 12px; }
+  .bio           { font-size: 12px; }
 
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
+  .badge    { font-size: 11px; padding: 4px 8px; }
+  .btn      { padding: 8px 12px; font-size: 12px; }
+  .btn.small{ padding: 5px 10px; font-size: 12px; }
+
+  .profile-tabs { margin: 16px 0 12px; }
+
+  .content-card { padding: 12px; border-radius: 8px; }
+  .about-text   { font-size: 13px; }
+
+  .empty-state   { padding: 20px 10px; }
+  .empty-state h3{ font-size: 15px; }
+  .empty-state p { font-size: 13px; }
+
+  .skill-chip   { padding: 6px 10px; font-size: 11px; }
+  .skill-row span{ font-size: 11px; padding: 4px 8px; }
+  .action-btn   { padding: 6px 10px; font-size: 12px; gap: 5px; }
+
+  .tab-dropdown-trigger { padding: 9px 12px; font-size: 12px; }
+  .tab-dropdown-item    { padding: 10px 12px; font-size: 12px; }
 }
 
-/* Hover effect */
-.edit-icon:hover {
-  transform: scale(1.05);
+/* Minimum — 300px */
+@media (max-width: 300px) {
+  .profile-wrapper { padding: 6px 0; margin: -10px; }
+  .profile-container { padding: 0 6px; }
+
+  .profile-hero {
+    padding: 10px 8px;
+    gap: 8px;
+    border-radius: 8px;
+  }
+
+  .avatar    { width: 58px; height: 58px; font-size: 18px; }
+  .edit-icon { width: 22px; height: 22px; }
+
+  .hero-right h1 { font-size: 15px; }
+  .hero-right h3 { font-size: 11px; }
+  .meta          { font-size: 11px; }
+  .bio           { font-size: 11px; }
+
+  .badge { font-size: 10px; padding: 3px 7px; }
+  .btn   { padding: 7px 10px; font-size: 11px; }
+
+  .profile-tabs { margin: 12px 0 10px; }
+
+  .content-card { padding: 10px; border-radius: 8px; }
+  .about-text   { font-size: 12px; }
+
+  .empty-state h3 { font-size: 13px; }
+  .empty-state p  { font-size: 12px; }
+
+  .skill-chip    { padding: 5px 8px; font-size: 10px; }
+  .skill-row span{ font-size: 10px; padding: 3px 7px; }
+  .action-btn    { padding: 5px 8px; font-size: 11px; }
+  .certificate-link { font-size: 11px; }
+
+  .tab-dropdown-trigger { padding: 8px 10px; font-size: 11px; }
+  .tab-dropdown-item    { padding: 9px 10px; font-size: 11px; }
 }
+

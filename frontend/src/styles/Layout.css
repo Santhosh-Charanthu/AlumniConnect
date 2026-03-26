@@ -3,32 +3,29 @@
 }
 
 .main {
-  margin-left: 250px;
-  width: 100%;
+  margin-left: 64px; /* collapsed sidebar width */
+  width: calc(100% - 64px);
+  transition: none; /* content doesn't shift — sidebar overlaps on hover */
 }
 
-.main {
-  margin-left: 270px; /* SAME as sidebar width */
-  width: calc(100% - 250px);
+.content {
+  padding: 16px;
 }
 
-/* Mobile */
+/* Tablet / mobile */
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    position: fixed;
-    z-index: 1000;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
   .main {
     margin-left: 0;
+    width: 100%;
   }
 
   .content {
-    padding: 30px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 400px) {
+  .content {
+    padding: 10px;
   }
 }

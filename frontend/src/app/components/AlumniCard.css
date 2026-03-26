@@ -80,3 +80,23 @@
   margin: 0;
   line-height: 1.5;
 }
+
+.alumni-card-msg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 0;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff7a18, #e06010);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.alumni-card-msg-btn:hover { opacity: 0.88; }

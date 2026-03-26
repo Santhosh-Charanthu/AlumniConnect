@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "../../../context/ToastContext";
 import { useRouter } from "next/navigation";
 import "./dashboard.css";
+import Loader from "../../../components/Loader";
 
 export default function DashboardPage() {
   const { showToast } = useToast();
@@ -12,6 +13,7 @@ export default function DashboardPage() {
   const [sessions, setSessions] = useState([]);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [alumni, setAlumni] = useState(null);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
     fetchSessions();
@@ -21,21 +23,23 @@ export default function DashboardPage() {
     try {
       const token = localStorage.getItem("token");
       console.log(token);
-      const res = await fetch("http://localhost:5000/api/alumni/my-sessions", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/my-sessions`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       const data = await res.json();
-
       console.log(data);
       if (data.success) {
         setSessions(data.sessions);
         setAlumni(data.alumni);
+      } else {
+        setLoadError(data.message || "Failed to load dashboard");
       }
     } catch (err) {
       console.error(err);
+      setLoadError("Failed to connect to server");
     }
   };
 
@@ -58,9 +62,8 @@ export default function DashboardPage() {
     (sum, s) => sum + (s.price || 0) * (s.currentSeats || 0),
     0,
   );
-  if (!alumni) {
-    return <p>Loading...</p>;
-  }
+  if (loadError) return <div style={{ padding: "2rem", color: "red" }}>{loadError}</div>;
+  if (!alumni) return <Loader />;
 
   return (
     <div className="dashboard">

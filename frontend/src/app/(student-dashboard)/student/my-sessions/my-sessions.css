@@ -8,6 +8,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 24px;
 }
 
@@ -25,6 +27,7 @@
 /* Tabs */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 24px;
 }
@@ -40,24 +43,19 @@
   transition: background 0.2s;
 }
 
-.tab-btn:hover {
-  background: #e2d5c7;
-}
-
-.tab-btn.active {
-  background: #ff7a00;
-  color: white;
-}
+.tab-btn:hover  { background: #e2d5c7; }
+.tab-btn.active { background: #ff7a00; color: white; }
 
 /* Sessions grid */
 .sessions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
 }
 
 /* Session card */
 .session-card {
+  cursor: pointer;
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e5e7eb;
@@ -95,6 +93,7 @@
   font-weight: 600;
   margin: 0 0 10px;
   color: #111827;
+  word-break: break-word;
 }
 
 /* Meta rows */
@@ -127,20 +126,9 @@
   color: #374151;
 }
 
-.badge.scheduled {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.badge.completed {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge.cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-}
+.badge.scheduled { background: #dbeafe; color: #1d4ed8; }
+.badge.completed  { background: #d1fae5; color: #065f46; }
+.badge.cancelled  { background: #fee2e2; color: #991b1b; }
 
 /* Empty state */
 .empty-state {
@@ -152,4 +140,433 @@
   padding: 60px 20px;
   color: #9ca3af;
   font-size: 15px;
+  text-align: center;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .student-my-sessions { padding: 16px; }
+  .page-header h1 { font-size: 22px; }
+  .sessions-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 420px) {
+  .student-my-sessions { padding: 10px; }
+  .page-header h1 { font-size: 18px; }
+  .tab-btn { padding: 7px 12px; font-size: 13px; }
+  .session-body { padding: 12px; }
+  .session-title { font-size: 14px; }
+  .session-cover { height: 150px; }
+  .session-cover-placeholder { height: 150px; }
+}
+
+@media (max-width: 360px) {
+  .student-my-sessions { padding: 8px; }
+  .page-header h1 { font-size: 16px; }
+  .tab-btn { padding: 6px 10px; font-size: 12px; }
+  .session-body { padding: 10px; }
+  .session-title { font-size: 13px; }
+  .meta-item { font-size: 12px; }
+  .badge { font-size: 11px; padding: 2px 8px; }
+}
+
+@media (max-width: 300px) {
+  .student-my-sessions { padding: 6px; }
+  .page-header h1 { font-size: 15px; }
+  .session-cover { height: 120px; }
+  .session-cover-placeholder { height: 120px; }
+  .session-body { padding: 8px; }
+}
+
+/* Live badge */
+.badge.live {
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: inline-block;
+  animation: pulse-live 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* Attended badge */
+.attended-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Live actions */
+.live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-join {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #16a34a;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-join:hover { background: #15803d; }
+.btn-join:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-attend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #6366f1;
+  background: transparent;
+  color: #6366f1;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-attend:hover { background: #6366f1; color: #fff; }
+.btn-attend:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.attendance-done {
+  font-size: 12px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* ── Unregister ── */
+.session-card {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+}
+
+.session-card-clickable {
+  cursor: pointer;
+  flex: 1;
+}
+
+.session-card-footer {
+  padding: 10px 16px 14px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-unregister {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #ef4444;
+  background: transparent;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-unregister:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.unregister-locked {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Confirm modal */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(3px);
+}
+
+.confirm-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-modal h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.confirm-modal p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-cancel:hover { background: #f9fafb; }
+
+.btn-confirm-danger {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-confirm-danger:hover { background: #dc2626; }
+.btn-confirm-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Card inner tabs (Info / Reviews) ── */
+.card-inner-tabs {
+  display: flex;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.card-inner-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.card-inner-tab.active {
+  color: #ff7a00;
+  border-bottom-color: #ff7a00;
+  font-weight: 600;
+}
+
+/* ── Reviews panel inside card ── */
+.card-reviews-panel {
+  padding: 14px 16px;
+  min-height: 160px;
+}
+
+.card-reviews-session-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px;
+  word-break: break-word;
+}
+
+.card-reviews-loading,
+.card-reviews-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 0;
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+}
+
+.card-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.card-review-item {
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.card-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.card-reviewer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.card-review-stars {
+  display: flex;
+  gap: 2px;
+}
+
+.card-review-comment {
+  font-size: 12px;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0 0 6px;
+  word-break: break-word;
+}
+
+.card-review-date {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ── Completed footer actions ── */
+.completed-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.btn-review {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #ff7a18, #e06010);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-review:hover { opacity: 0.88; }
+
+.reviewed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Review item edit/delete ── */
+.card-review-item.my-review {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.card-review-top-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.my-review-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #ff7a18;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.review-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.review-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  background: transparent;
+}
+
+.review-action-btn.edit  { color: #6366f1; }
+.review-action-btn.edit:hover  { background: #eef2ff; }
+.review-action-btn.delete { color: #ef4444; }
+.review-action-btn.delete:hover { background: #fef2f2; }

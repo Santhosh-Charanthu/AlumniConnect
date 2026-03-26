@@ -1,94 +1,141 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Calendar, MessageSquare, CheckCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Calendar, MessageSquare, CheckCheck, Users, ExternalLink, Radio, Star } from "lucide-react";
+import { authFetch } from "../../../../services/authFetch";
+import { useNotifications } from "../../../context/NotificationContext";
+import { useRouter } from "next/navigation";
+import Loader from "../../../components/Loader";
+import ReviewModal from "../../../components/ReviewModal";
 import "./notifications.css";
 
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "session",
-    title: "New Session Available",
-    description:
-      "A new session on 'React Advanced Patterns' has been posted by Priya Sharma.",
-    timestamp: "2026-03-15T10:30:00Z",
-    read: false,
-  },
-  {
-    id: 2,
-    type: "reminder",
-    title: "Session Reminder",
-    description: "Your session 'System Design Fundamentals' starts in 1 hour.",
-    timestamp: "2026-03-14T09:00:00Z",
-    read: false,
-  },
-  {
-    id: 3,
-    type: "message",
-    title: "New Message",
-    description: "Rahul Verma sent you a message.",
-    timestamp: "2026-03-13T14:20:00Z",
-    read: true,
-  },
-  {
-    id: 4,
-    type: "session",
-    title: "Session Completed",
-    description:
-      "Your session 'DSA Interview Prep' has been marked as completed.",
-    timestamp: "2026-03-12T16:00:00Z",
-    read: true,
-  },
-];
+const API = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api`;
 
 const TYPE_ICON = {
   session: Calendar,
+  session_booking: Calendar,
+  session_cancelled: Calendar,
+  new_session: Calendar,
+  session_live: Radio,
+  session_completed: Star,
   reminder: Bell,
   message: MessageSquare,
+  group_invite: Users,
 };
 
 const formatDate = (iso) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [flash, setFlash] = useState(null);
+  const [joiningId, setJoiningId] = useState(null);
+  const [reviewModal, setReviewModal] = useState(null); // { sessionId, sessionTitle }
+  const { setUnreadCount } = useNotifications();
+  const router = useRouter();
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  const filtered =
-    filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
-
-  const markAsRead = (id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const fetchNotifications = async () => {
+    try {
+      const res = await authFetch(`${API}/student/notifications`);
+      const data = await res.json();
+      if (data.success) setNotifications(data.notifications);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const showFlash = (message, type = "success") => {
+    setFlash({ message, type });
+    setTimeout(() => setFlash(null), 3500);
+  };
+
+  const markAsRead = async (id) => {
+    setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+    await authFetch(`${API}/student/notifications/read`, { method: "PATCH" });
+    setUnreadCount(0);
+  };
+
+  const markAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    await authFetch(`${API}/student/notifications/read`, { method: "PATCH" });
+    setUnreadCount(0);
+  };
+
+  const handleJoinGroup = async (notif) => {
+    const groupId = notif.meta?.groupId;
+    if (!groupId) return;
+    setJoiningId(notif._id);
+    try {
+      const res = await authFetch(`${API}/student/groups/${groupId}/join`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showFlash(`You joined "${notif.meta.groupName}" successfully`);
+        // Mark as joined in local state
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notif._id
+              ? { ...n, isRead: true, meta: { ...n.meta, alreadyJoined: true } }
+              : n
+          )
+        );
+      } else {
+        showFlash(data.message || "Failed to join group", "error");
+      }
+    } catch {
+      showFlash("Failed to join group", "error");
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const filtered = filter === "unread" ? notifications.filter((n) => !n.isRead) : notifications;
+
+  if (loading) return <Loader />;
 
   return (
     <div className="notifications-page">
+      {/* Review modal */}
+      {reviewModal && (
+        <ReviewModal
+          session={reviewModal}
+          onClose={() => setReviewModal(null)}
+          onSubmitted={() => showFlash("Review submitted successfully!")}
+        />
+      )}
+
+      {/* Flash message */}
+      {flash && (
+        <div className={`notif-flash ${flash.type}`}>
+          {flash.message}
+        </div>
+      )}
+
       <div className="notifications-header">
-        <h1>Notifications</h1>
+        <div>
+          <h1>Notifications</h1>
+          {unreadCount > 0 && <span className="unread-badge">{unreadCount} unread</span>}
+        </div>
         {unreadCount > 0 && (
-          <span className="unread-badge">{unreadCount} unread</span>
+          <button className="mark-all-btn" onClick={markAllRead}>
+            <CheckCheck size={14} /> Mark all read
+          </button>
         )}
       </div>
 
       <div className="filter-row">
-        <button
-          className={`filter-btn ${filter === "all" ? "active" : ""}`}
-          onClick={() => setFilter("all")}
-        >
+        <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
           All
         </button>
-        <button
-          className={`filter-btn ${filter === "unread" ? "active" : ""}`}
-          onClick={() => setFilter("unread")}
-        >
+        <button className={`filter-btn ${filter === "unread" ? "active" : ""}`} onClick={() => setFilter("unread")}>
           Unread
         </button>
       </div>
@@ -99,30 +146,94 @@ export default function NotificationsPage() {
         <div className="notifications-list">
           {filtered.map((notif) => {
             const Icon = TYPE_ICON[notif.type] || Bell;
+            const isGroupInvite = notif.type === "group_invite";
+            const isNewSession = notif.type === "new_session";
+            const isSessionLive = notif.type === "session_live";
+            const isSessionCompleted = notif.type === "session_completed";
+            const alreadyJoined = notif.meta?.alreadyJoined;
+
+            const notifTitle = isGroupInvite
+              ? "Join Group Chat"
+              : notif.type === "session_cancelled"
+              ? "Session Cancelled"
+              : isNewSession
+              ? "New Session Available"
+              : isSessionLive
+              ? "Session is Live Now!"
+              : isSessionCompleted
+              ? "Session Completed"
+              : "Session Update";
+
             return (
-              <div
-                key={notif.id}
-                className={`notification-item ${!notif.read ? "unread" : ""}`}
-              >
-                <span className={`notif-dot ${!notif.read ? "dot-unread" : "dot-read"}`} />
+              <div key={notif._id} className={`notification-item ${!notif.isRead ? "unread" : ""}`}>
+                <span className={`notif-dot ${!notif.isRead ? "dot-unread" : "dot-read"}`} />
 
                 <div className={`notif-icon ${notif.type}`}>
                   <Icon size={18} />
                 </div>
 
                 <div className="notif-content">
-                  <p className={`notif-title ${!notif.read ? "bold" : ""}`}>
-                    {notif.title}
-                  </p>
-                  <p className="notif-desc">{notif.description}</p>
-                  <p className="notif-time">{formatDate(notif.timestamp)}</p>
+                  <p className={`notif-title ${!notif.isRead ? "bold" : ""}`}>{notifTitle}</p>
+                  <p className="notif-desc">{notif.message}</p>
+                  <p className="notif-time">{formatDate(notif.createdAt)}</p>
+
+                  {isGroupInvite && (
+                    <div className="notif-actions">
+                      {alreadyJoined ? (
+                        <span className="joined-badge">✓ Joined</span>
+                      ) : (
+                        <button
+                          className="join-group-btn"
+                          disabled={joiningId === notif._id}
+                          onClick={() => handleJoinGroup(notif)}
+                        >
+                          {joiningId === notif._id ? "Joining..." : "Join Group"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {isNewSession && notif.meta?.sessionId && (
+                    <div className="notif-actions">
+                      <button
+                        className="view-session-btn"
+                        onClick={() => router.push(`/student/session/${notif.meta.sessionId}`)}
+                      >
+                        <ExternalLink size={13} /> View Session
+                      </button>
+                    </div>
+                  )}
+
+                  {isSessionLive && (
+                    <div className="notif-actions">
+                      <button
+                        className="join-now-btn"
+                        onClick={() => router.push("/student/my-sessions")}
+                      >
+                        <ExternalLink size={13} /> Join Now
+                      </button>
+                    </div>
+                  )}
+
+                  {isSessionCompleted && (
+                    <div className="notif-actions">
+                      <button
+                        className="leave-review-btn"
+                        onClick={() =>
+                          setReviewModal({
+                            _id: notif.meta?.sessionId,
+                            title: notif.meta?.sessionTitle || "Session",
+                          })
+                        }
+                      >
+                        <Star size={13} /> Leave a Review
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {!notif.read && (
-                  <button
-                    className="mark-read-btn"
-                    onClick={() => markAsRead(notif.id)}
-                  >
+                {!notif.isRead && (
+                  <button className="mark-read-btn" onClick={() => markAsRead(notif._id)}>
                     <CheckCheck size={14} />
                     Mark as read
                   </button>

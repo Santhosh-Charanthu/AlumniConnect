@@ -21,12 +21,6 @@
   margin-bottom: 30px;
 }
 
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Stat card */
 .stat-card {
   padding: 20px;
@@ -39,32 +33,14 @@
   gap: 8px;
 }
 
-.stat-card:hover {
-  transform: translateY(-4px);
-}
+.stat-card:hover { transform: translateY(-4px); }
 
-.stat-card h2 {
-  font-size: 32px;
-  margin: 0;
-}
+.stat-card h2 { font-size: 32px; margin: 0; }
+.stat-card p  { margin: 0; font-size: 14px; color: #374151; }
 
-.stat-card p {
-  margin: 0;
-  font-size: 14px;
-  color: #374151;
-}
-
-.stat-card.blue {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-}
-
-.stat-card.green {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-}
-
-.stat-card.orange {
-  background: linear-gradient(135deg, #fde2d0, #fbcfe8);
-}
+.stat-card.blue   { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+.stat-card.green  { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+.stat-card.orange { background: linear-gradient(135deg, #fde2d0, #fbcfe8); }
 
 /* Sessions section */
 .sessions-section {
@@ -99,18 +75,19 @@
   flex-wrap: wrap;
 }
 
-/* Session info */
 .session-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .session-info h3 {
   font-size: 15px;
   font-weight: 600;
   margin: 0;
+  word-break: break-word;
 }
 
 .alumni-name {
@@ -121,7 +98,6 @@
   color: #6b7280;
 }
 
-/* Session time */
 .session-time {
   display: flex;
   flex-direction: column;
@@ -146,20 +122,9 @@
 }
 
 .status-badge.status-confirmed,
-.status-badge.status-active {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.status-pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.status-badge.status-cancelled {
-  background: #fee2e2;
-  color: #991b1b;
-}
+.status-badge.status-active  { background: #d1fae5; color: #065f46; }
+.status-badge.status-pending  { background: #fef3c7; color: #92400e; }
+.status-badge.status-cancelled{ background: #fee2e2; color: #991b1b; }
 
 /* Empty state */
 .empty-state {
@@ -167,4 +132,53 @@
   padding: 40px 20px;
   color: #9ca3af;
   font-size: 15px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .student-dashboard { padding: 16px; }
+  .welcome-section h1 { font-size: 22px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card { padding: 14px; }
+  .stat-card h2 { font-size: 24px; }
+  .sessions-section { padding: 16px; }
+}
+
+@media (max-width: 540px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat-card { padding: 12px; gap: 4px; }
+  .stat-card h2 { font-size: 20px; }
+  .stat-card p { font-size: 12px; }
+  .session-item { padding: 12px; }
+}
+
+@media (max-width: 420px) {
+  .student-dashboard { padding: 10px; }
+  .welcome-section h1 { font-size: 18px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat-card { padding: 10px; border-radius: 10px; }
+  .stat-card h2 { font-size: 18px; }
+  .stat-card p { font-size: 11px; }
+  .sessions-section { padding: 12px; border-radius: 10px; }
+  .sessions-section h2 { font-size: 16px; }
+  .session-info h3 { font-size: 13px; }
+}
+
+@media (max-width: 360px) {
+  .student-dashboard { padding: 8px; }
+  .welcome-section h1 { font-size: 16px; }
+  .stats-grid { gap: 5px; }
+  .stat-card { padding: 8px; }
+  .stat-card h2 { font-size: 16px; }
+  .stat-card p { font-size: 10px; }
+  .sessions-section { padding: 10px; }
+}
+
+@media (max-width: 300px) {
+  .student-dashboard { padding: 6px; }
+  .stats-grid { grid-template-columns: 1fr; gap: 6px; }
+  .stat-card { padding: 10px; flex-direction: row; align-items: center; gap: 10px; }
+  .stat-card h2 { font-size: 20px; }
+  .sessions-section { padding: 8px; }
+  .session-item { padding: 8px; }
 }

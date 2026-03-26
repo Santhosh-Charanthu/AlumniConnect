@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "../../../context/ToastContext";
 import { BookOpen, CalendarCheck, CheckCircle, Calendar, Clock, User } from "lucide-react";
 import "./dashboard.css";
+import Loader from "../../../components/Loader";
 
 export default function StudentDashboardPage() {
   const { showToast } = useToast();
@@ -14,7 +15,7 @@ export default function StudentDashboardPage() {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/student/dashboard", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/dashboard`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -36,9 +37,7 @@ export default function StudentDashboardPage() {
     fetchDashboard();
   }, []);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  if (loading) return <Loader />;
 
   if (!dashboardData) {
     return <p>Failed to load dashboard.</p>;

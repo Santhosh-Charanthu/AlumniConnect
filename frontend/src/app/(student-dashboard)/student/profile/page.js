@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from "../../../context/ToastContext";
 import { Pencil, X, Plus, User, GraduationCap, BookOpen, Camera } from "lucide-react";
 import "./profile.css";
+import Loader from "../../../components/Loader";
 
 export default function StudentProfilePage() {
   const { showToast } = useToast();
@@ -22,7 +23,7 @@ export default function StudentProfilePage() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5000/api/student/profile", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -99,7 +100,7 @@ export default function StudentProfilePage() {
         formData.append("profileImage", imageFile);
       }
 
-      const res = await fetch("http://localhost:5000/api/student/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -120,7 +121,7 @@ export default function StudentProfilePage() {
     }
   };
 
-  if (loading) return <p>Loading profile...</p>;
+  if (loading) return <Loader text="Loading profile..." />;
   if (!profile || !user) return <p>Failed to load profile.</p>;
 
   const avatarSrc = imagePreview || profile?.profileImage?.url || null;

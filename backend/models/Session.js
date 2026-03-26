@@ -25,6 +25,11 @@ const sessionSchema = new mongoose.Schema(
       required: true,
     },
 
+    deadline: {
+      type: Date,
+      required: true,
+    },
+
     duration: {
       type: Number, // minutes
       required: true,
@@ -33,12 +38,6 @@ const sessionSchema = new mongoose.Schema(
     price: {
       type: Number,
       default: 0,
-    },
-
-    meetLink: {
-      type: String,
-      required: true,
-      select: false,
     },
 
     maxSeats: Number,
@@ -71,8 +70,23 @@ const sessionSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["scheduled", "completed", "cancelled"],
+      enum: ["scheduled", "live", "completed", "cancelled"],
       default: "scheduled",
+    },
+
+    meetLink: {
+      type: String,
+      default: null,
+    },
+
+    actualStartTime: {
+      type: Date,
+      default: null,
+    },
+
+    actualEndTime: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },

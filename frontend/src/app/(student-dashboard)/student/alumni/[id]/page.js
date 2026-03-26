@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Star, Calendar, Clock, Users } from "lucide-react";
+import { ArrowLeft, Star, Calendar, Clock, Users, MessageSquare } from "lucide-react";
 import "../../../../../app/(dashboard)/alumni/profile/profile.css";
 import "./alumni-profile.css";
+import Loader from "../../../../../app/components/Loader";
 
 export default function StudentAlumniProfilePage() {
   const { id } = useParams();
@@ -17,11 +18,23 @@ export default function StudentAlumniProfilePage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState("about");
+  const [showTabDropdown, setShowTabDropdown] = useState(false);
+  const tabDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (tabDropdownRef.current && !tabDropdownRef.current.contains(e.target)) {
+        setShowTabDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => {
     const fetchAlumni = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/alumni/${id}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/${id}`);
         const data = await res.json();
         if (res.ok && data.success) {
           setAlumni(data.alumni);
@@ -40,7 +53,7 @@ export default function StudentAlumniProfilePage() {
     fetchAlumni();
   }, [id]);
 
-  if (loading) return <div className="profile-loading"><p>Loading profile...</p></div>;
+  if (loading) return <Loader text="Loading profile..." />;
   if (notFound || !alumni) return <div className="profile-not-found"><p>Alumni not found</p></div>;
 
   const avgRating = reviews.length
@@ -82,20 +95,52 @@ export default function StudentAlumniProfilePage() {
               {alumni.company} • {user?.college} • Batch {alumni.batchYear}
             </p>
             <p className="bio">{alumni.bio}</p>
+            <button
+              className="alumni-profile-msg-btn"
+              onClick={() => router.push(`/student/messages?dm=${alumni.userId?._id || alumni.userId}&name=${encodeURIComponent(user?.name || "")}`)}
+            >
+              <MessageSquare size={15} /> Message
+            </button>
           </div>
         </section>
 
         {/* TABS */}
-        <nav className="profile-tabs">
-          {tabs.map((tab) => (
+        <nav className="profile-tabs" ref={tabDropdownRef}>
+          <div className="tabs-desktop">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                className={`tab ${activeTab === tab ? "active" : ""}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div className="tabs-mobile">
             <button
-              key={tab}
-              className={`tab ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              className="tab-dropdown-trigger"
+              onClick={() => setShowTabDropdown((p) => !p)}
             >
-              {tab}
+              <span>{activeTab}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showTabDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
-          ))}
+            {showTabDropdown && (
+              <div className="tab-dropdown-menu">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab}
+                    className={`tab-dropdown-item ${activeTab === tab ? "active" : ""}`}
+                    onClick={() => { setActiveTab(tab); setShowTabDropdown(false); }}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* TAB CONTENT */}

@@ -5,6 +5,7 @@ import { authFetch } from "../../../../services/authFetch";
 import AlumniCard from "../../../components/AlumniCard";
 import { Search, SlidersHorizontal, Users } from "lucide-react";
 import "./explore-alumni.css";
+import Loader from "../../../components/Loader";
 
 export default function ExploreAlumniPage() {
   const [filters, setFilters] = useState({
@@ -32,7 +33,7 @@ export default function ExploreAlumniPage() {
 
       const queryString = params.toString();
       const res = await authFetch(
-        "http://localhost:5000/api/alumni/search" + (queryString ? "?" + queryString : "")
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/search` + (queryString ? "?" + queryString : "")
       );
       const data = await res.json();
       if (data.success) {
@@ -60,6 +61,8 @@ export default function ExploreAlumniPage() {
     }, 300);
     return () => clearTimeout(debounceTimer.current);
   }, [filters, sort]);
+
+  if (loading) return <Loader />;
 
   return (
     <div className="explore-alumni-page">
@@ -123,13 +126,7 @@ export default function ExploreAlumniPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="alumni-grid">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="skeleton-card" />
-          ))}
-        </div>
-      ) : alumni.length === 0 ? (
+      {alumni.length === 0 ? (
         <div className="empty-state">
           <Users size={48} />
           <p>No results found</p>

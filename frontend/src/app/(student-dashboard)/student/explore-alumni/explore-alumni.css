@@ -4,9 +4,7 @@
 }
 
 /* Header */
-.explore-header {
-  margin-bottom: 24px;
-}
+.explore-header { margin-bottom: 24px; }
 
 .explore-header h1 {
   font-size: 24px;
@@ -49,6 +47,7 @@
   background: transparent;
   outline: none;
   font-size: 14px;
+  min-width: 0;
 }
 
 /* Filters row */
@@ -68,9 +67,7 @@
   box-sizing: border-box;
 }
 
-.filters-row input:focus {
-  border-color: #2563eb;
-}
+.filters-row input:focus { border-color: #2563eb; }
 
 /* Sort row */
 .sort-row {
@@ -80,12 +77,8 @@
   flex-wrap: wrap;
 }
 
-.sort-row span {
-  font-size: 13px;
-  color: #666;
-}
+.sort-row span { font-size: 13px; color: #666; }
 
-/* Sort button */
 .sort-btn {
   padding: 6px 14px;
   border-radius: 20px;
@@ -96,10 +89,7 @@
   transition: all 0.2s;
 }
 
-.sort-btn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-}
+.sort-btn:hover { border-color: #2563eb; color: #2563eb; }
 
 .sort-btn.active {
   background: #2563eb;
@@ -110,26 +100,8 @@
 /* Alumni grid */
 .alumni-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
-}
-
-/* Skeleton loading card */
-.skeleton-card {
-  height: 280px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 12px;
-}
-
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
 }
 
 /* Empty state */
@@ -144,25 +116,40 @@
   text-align: center;
 }
 
-.empty-state p {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0;
-}
+.empty-state p    { font-size: 18px; font-weight: 600; margin: 0; }
+.empty-state span { font-size: 14px; }
 
-.empty-state span {
-  font-size: 14px;
-}
-
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .filters-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .explore-alumni-page { padding: 16px; }
+  .filters-row { grid-template-columns: repeat(2, 1fr); }
+  .explore-controls { padding: 14px; }
 }
 
-@media (max-width: 480px) {
-  .filters-row {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 540px) {
+  .explore-alumni-page { padding: 12px; }
+  .alumni-grid { grid-template-columns: 1fr; }
+  .explore-header h1 { font-size: 20px; }
+}
+
+@media (max-width: 420px) {
+  .explore-alumni-page { padding: 10px; }
+  .filters-row { grid-template-columns: 1fr; }
+  .explore-controls { padding: 12px; gap: 10px; }
+  .explore-header h1 { font-size: 18px; }
+}
+
+@media (max-width: 360px) {
+  .explore-alumni-page { padding: 8px; }
+  .explore-controls { padding: 10px; border-radius: 8px; }
+  .explore-header h1 { font-size: 16px; }
+  .sort-btn { padding: 5px 10px; font-size: 11px; }
+}
+
+@media (max-width: 300px) {
+  .explore-alumni-page { padding: 6px; }
+  .explore-controls { padding: 8px; }
+  .explore-header h1 { font-size: 15px; }
+  .search-bar { padding: 8px 10px; }
+  .filters-row input { padding: 7px 10px; font-size: 12px; }
 }

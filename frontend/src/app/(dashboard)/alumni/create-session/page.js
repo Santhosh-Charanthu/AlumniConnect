@@ -13,15 +13,16 @@ export default function CreateSession() {
     title: "",
     description: "",
     startTime: "",
+    deadline: "",
     duration: "",
     price: "",
-    meetLink: "",
     maxSeats: "",
     category: "",
   });
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -35,6 +36,8 @@ export default function CreateSession() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
 
     const formData = new FormData();
 
@@ -54,7 +57,7 @@ export default function CreateSession() {
         return;
       }
       const res = await fetch(
-        "http://localhost:5000/api/alumni/create-session",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/create-session`,
         {
           method: "POST",
           headers: {
@@ -74,6 +77,8 @@ export default function CreateSession() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -134,6 +139,16 @@ export default function CreateSession() {
             </div>
 
             <div className="form-group">
+              <label>Registration Deadline</label>
+              <input
+                type="datetime-local"
+                name="deadline"
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
               <label>Duration (minutes)</label>
               <input
                 type="number"
@@ -168,19 +183,8 @@ export default function CreateSession() {
             />
           </div>
 
-          {/* Meet Link */}
-          <div className="form-group">
-            <label>Meeting Link</label>
-            <input
-              type="text"
-              name="meetLink"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <button type="submit" className="submit-btn">
-            Create Session
+          <button type="submit" className="submit-btn" disabled={submitting}>
+            {submitting ? "Creating..." : "Create Session"}
           </button>
         </form>
       </div>

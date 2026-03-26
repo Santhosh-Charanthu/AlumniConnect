@@ -306,15 +306,17 @@
   background: #f1f5f9;
 }
 
-/* Mobile fix */
+/* Mobile */
 @media (max-width: 480px) {
+  .card {
+    padding: 24px 16px;
+    padding-right: 16px;
+  }
+
   .fileWrapper {
     grid-column: span 1;
   }
-}
 
-/* Mobile */
-@media (max-width: 480px) {
   .formGrid {
     grid-template-columns: 1fr;
   }
@@ -322,4 +324,201 @@
   .fullWidth {
     grid-column: span 1;
   }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 16px 12px;
+    border-radius: 10px;
+  }
+
+  .header h1 {
+    font-size: 18px;
+  }
+
+  .input,
+  .select {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+
+  .submitBtn {
+    font-size: 14px;
+    padding: 11px;
+  }
+}
+
+@media (max-width: 300px) {
+  .container {
+    padding: 6px;
+  }
+
+  .card {
+    padding: 12px 8px;
+  }
+
+  .header h1 {
+    font-size: 16px;
+  }
+
+  .skillPill {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
+
+/* ── Email row with Send OTP button ── */
+.emailRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.emailRow .input {
+  flex: 1;
+}
+
+.sendOtpBtn {
+  white-space: nowrap;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sendOtpBtn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.sendOtpBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.verifiedBadge {
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── OTP Modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  position: relative;
+  text-align: center;
+}
+
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modalClose:hover {
+  color: #0f172a;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.modalSubtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 28px;
+}
+
+/* OTP digit boxes */
+.otpRow {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.otpBox {
+  width: 46px;
+  height: 54px;
+  border-radius: 10px;
+  border: 2px solid #cbd5e1;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.otpBox:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Resend row */
+.resendRow {
+  margin-top: 18px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.resendTimer {
+  color: #94a3b8;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.resendBtn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.resendBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

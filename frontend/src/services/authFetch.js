@@ -1,5 +1,6 @@
 export const authFetch = async (url, options = {}) => {
   const token = localStorage.getItem("token");
+  console.log(token);
 
   const headers = {
     ...(options.headers || {}),

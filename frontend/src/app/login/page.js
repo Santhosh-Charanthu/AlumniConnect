@@ -23,7 +23,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await loginUser(form);
+      const res = await loginUser({ ...form, role });
 
       // ❌ login failed (no token)
       if (!res.token || !res.user) {

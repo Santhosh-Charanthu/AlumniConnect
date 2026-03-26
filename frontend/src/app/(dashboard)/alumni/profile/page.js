@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AboutModal from "../../../components/profile/AboutModal";
 import ExperienceModal from "../../../components/profile/ExperienceModal";
 import ProjectModal from "../../../components/profile/ProjectModal";
@@ -20,13 +20,26 @@ export default function AlumniProfile() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const { showToast } = useToast();
-  const { showToastAfterRedirect } = useToast();
+  const [showTabDropdown, setShowTabDropdown] = useState(false);
+  const tabDropdownRef = useRef(null);
+  const tabs = ["about", "experience", "projects", "achievements", "skills"];
+
+  // close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (tabDropdownRef.current && !tabDropdownRef.current.contains(e.target)) {
+        setShowTabDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5000/api/alumni/profile", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -50,7 +63,7 @@ export default function AlumniProfile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/alumni/about", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/about`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +95,7 @@ export default function AlumniProfile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/experience", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/experience`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +127,7 @@ export default function AlumniProfile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/projects", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,7 +159,7 @@ export default function AlumniProfile() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/achievements", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/achievements`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,8 +187,12 @@ export default function AlumniProfile() {
     }
   };
 
-  if (!profile) return <p>Loading profile...</p>;
-
+  if (!profile) return (
+    <div className="profile-loader">
+      <div className="loader-spinner" />
+      <p className="loader-text">Loading profile...</p>
+    </div>
+  );
   return (
     <div className="profile-wrapper">
       <div className="profile-container">
@@ -222,9 +239,11 @@ export default function AlumniProfile() {
         </section>
 
         {/* TABS */}
-        <nav className="profile-tabs">
-          {["about", "experience", "projects", "achievements", "skills"].map(
-            (tab) => (
+        {/* TABS — buttons on desktop, dropdown on mobile */}
+        <nav className="profile-tabs" ref={tabDropdownRef}>
+          {/* Desktop pill buttons */}
+          <div className="tabs-desktop">
+            {tabs.map((tab) => (
               <button
                 key={tab}
                 className={`tab ${activeTab === tab ? "active" : ""}`}
@@ -232,8 +251,48 @@ export default function AlumniProfile() {
               >
                 {tab}
               </button>
-            ),
-          )}
+            ))}
+          </div>
+
+          {/* Mobile dropdown */}
+          <div className="tabs-mobile">
+            <button
+              className="tab-dropdown-trigger"
+              onClick={() => setShowTabDropdown((p) => !p)}
+            >
+              <span>{activeTab}</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ transform: showTabDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {showTabDropdown && (
+              <div className="tab-dropdown-menu">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab}
+                    className={`tab-dropdown-item ${activeTab === tab ? "active" : ""}`}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setShowTabDropdown(false);
+                    }}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* TAB CONTENT */}

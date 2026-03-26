@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   CalendarPlus,
@@ -11,11 +12,19 @@ import {
   User,
   LogOut,
 } from "lucide-react";
+import { useNotifications } from "../context/NotificationContext";
+import { useMessages } from "../context/MessageContext";
 import "../../styles/Sidebar.css";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { unreadCount, refreshUnread } = useNotifications();
+  const { unreadMessages } = useMessages();
+
+  useEffect(() => {
+    refreshUnread();
+  }, [refreshUnread]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -23,51 +32,49 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   };
 
   const menuItems = [
-    { name: "Dashboard", href: "/alumni/dashboard", icon: LayoutDashboard },
-    {
-      name: "Create Session",
-      href: "/alumni/create-session",
-      icon: CalendarPlus,
-    },
-    { name: "My Sessions", href: "/alumni/my-sessions", icon: CalendarCheck },
-    { name: "Notifications", href: "/alumni/notifications", icon: Bell },
-    { name: "Messaging", href: "/alumni/messages", icon: MessageSquare },
-    { name: "Profile", href: "/alumni/profile", icon: User },
+    { name: "Dashboard",      href: "/alumni/dashboard",      icon: LayoutDashboard },
+    { name: "Create Session", href: "/alumni/create-session", icon: CalendarPlus },
+    { name: "My Sessions",    href: "/alumni/my-sessions",    icon: CalendarCheck },
+    { name: "Notifications",  href: "/alumni/notifications",  icon: Bell, badge: unreadCount },
+    { name: "Messaging",      href: "/alumni/messages",       icon: MessageSquare, badge: unreadMessages },
+    { name: "Profile",        href: "/alumni/profile",        icon: User },
   ];
 
   return (
     <>
-      {/* Overlay for mobile */}
       {isOpen && (
-        <div className="overlay" onClick={() => setIsOpen(false)}></div>
+        <div className="overlay" onClick={() => setIsOpen(false)} />
       )}
 
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        <div className="logo-icon">A</div>
         <h2 className="logo">AlumniConnect</h2>
 
         <nav>
-          {menuItems.map((item, index) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
-
             return (
               <Link
-                key={index}
+                key={item.href}
                 href={item.href}
                 className={`menu-item ${isActive ? "active" : ""}`}
+                data-tooltip={item.name}
               >
-                <Icon size={20} />
-                <span>{item.name}</span>
+                <span className="menu-icon-wrap">
+                  <Icon size={20} />
+                  {item.badge > 0 && <span className="notif-badge-dot" />}
+                </span>
+                <span className="menu-label">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Logout at bottom */}
         <div className="logout">
           <button onClick={handleLogout}>
             <LogOut size={20} />
-            Logout
+            <span className="logout-label">Logout</span>
           </button>
         </div>
       </aside>

@@ -2,6 +2,9 @@ const Alumni = require("../models/Alumni");
 const User = require("../models/User");
 const Session = require("../models/Session");
 const Review = require("../models/Review");
+const Registration = require("../models/Registration");
+const Notification = require("../models/Notification");
+const StudentProfile = require("../models/Student");
 const cloudinary = require("../config/cloudinary");
 
 exports.getMyProfile = async (req, res) => {
@@ -75,22 +78,22 @@ exports.createSession = async (req, res) => {
       title,
       description,
       startTime,
+      deadline,
       duration,
       price,
-      meetLink,
       maxSeats,
       category,
     } = req.body;
 
     const userId = req.user.userId;
-    const alumniId = await Alumni.findOne({ userId: userId });
+    const alumniProfile = await Alumni.findOne({ userId });
 
     if (
       !title ||
       !description ||
       !startTime ||
+      !deadline ||
       !duration ||
-      !meetLink ||
       !category
     ) {
       return res.status(400).json({
@@ -98,12 +101,6 @@ exports.createSession = async (req, res) => {
         message: "All required fields must be filled",
       });
     }
-    // if (user.role != "alumni") {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "You are not authorized for this action",
-    //   });
-    // }
 
     if (!req.file) {
       return res.status(400).json({
@@ -118,17 +115,61 @@ exports.createSession = async (req, res) => {
     };
 
     const session = await Session.create({
-      alumniId,
+      alumniId: alumniProfile._id,
       title,
       description,
       startTime,
+      deadline,
       duration,
       price,
       coverImage,
-      meetLink,
       maxSeats,
       category,
     });
+
+    // Auto-create a group chat for this session
+    const GroupChat = require("../models/GroupChat");
+    const alumniUser = await User.findById(userId).select("name");
+    const group = await GroupChat.create({
+      name: `${title} — by ${alumniUser?.name || "Alumni"}`,
+      description: `Group chat for the session: ${title}`,
+      createdBy: userId,
+      sessionId: session._id,
+      members: [{ user: userId, role: "admin" }],
+    });
+
+    // Notify the alumni that their group chat is ready (upsert to prevent duplicates)
+    await Notification.findOneAndUpdate(
+      { userId, type: "session_booking", "meta.sessionId": session._id, "meta.groupId": group._id },
+      {
+        $setOnInsert: {
+          userId,
+          type: "session_booking",
+          message: `A group chat has been created for your session "${title}". Participants will be added as they register.`,
+          meta: { sessionId: session._id, sessionTitle: title, groupId: group._id },
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    // Notify all students from the same college about the new session
+    const alumniUser2 = await User.findById(userId).select("college");
+    const collegeStudents = await User.find({ role: "student", college: alumniUser2?.college }).select("_id");
+    const { onlineUsers } = require("../socket/socket");
+    const io = req.app.get("io");
+
+    await Promise.all(
+      collegeStudents.map(async (student) => {
+        const notif = await Notification.create({
+          userId: student._id,
+          type: "new_session",
+          message: `A new session "${title}" has been created by ${alumniUser?.name || "an alumni"}. Check it out!`,
+          meta: { sessionId: session._id, sessionTitle: title },
+        });
+        const socketId = onlineUsers.get(student._id.toString());
+        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+      })
+    );
 
     res.status(201).json({
       success: true,
@@ -148,23 +189,18 @@ exports.createSession = async (req, res) => {
 exports.getMySessions = async (req, res) => {
   try {
     const userId = req.user.userId;
-    // const user = await User.findById(userId);
-    const alumni = await Alumni.findOne({ userId: userId }).populate("userId");
+    const alumni = await Alumni.findOne({ userId }).populate("userId");
 
-    const sessions = await Session.find({
-      alumniId: alumni._id,
-    }).sort({ startTime: -1 });
+    if (!alumni) {
+      return res.status(404).json({ success: false, message: "Alumni profile not found" });
+    }
 
-    res.status(200).json({
-      alumni,
-      success: true,
-      sessions,
-    });
+    const sessions = await Session.find({ alumniId: alumni._id }).sort({ startTime: -1 });
+
+    res.status(200).json({ success: true, alumni, sessions });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error fetching sessions",
-    });
+    console.error("getMySessions error:", error);
+    res.status(500).json({ success: false, message: "Error fetching sessions", error: error.message });
   }
 };
 
@@ -176,7 +212,7 @@ exports.getSessionById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Alumni not found" });
     }
 
-    const session = await Session.findById(id).select("+meetLink");
+    const session = await Session.findById(id);
     if (!session) {
       return res.status(404).json({ success: false, message: "Session not found" });
     }
@@ -208,8 +244,8 @@ exports.updateSession = async (req, res) => {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const { title, description, startTime, duration, price, meetLink, maxSeats, category, status } = req.body;
-    const updateData = { title, description, startTime, duration, price, meetLink, maxSeats, category, status };
+    const { title, description, startTime, deadline, duration, price, maxSeats, category, status } = req.body;
+    const updateData = { title, description, startTime, deadline, duration, price, maxSeats, category, status };
 
     // Remove undefined fields
     Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
@@ -225,7 +261,7 @@ exports.updateSession = async (req, res) => {
       };
     }
 
-    const updatedSession = await Session.findByIdAndUpdate(id, updateData, { new: true }).select("+meetLink");
+    const updatedSession = await Session.findByIdAndUpdate(id, updateData, { new: true });
 
     res.status(200).json({ success: true, message: "Session updated successfully", session: updatedSession });
   } catch (error) {
@@ -254,10 +290,61 @@ exports.deleteSession = async (req, res) => {
       await cloudinary.uploader.destroy(session.coverImage.filename);
     }
 
+    // Get all registered students before deleting
+    const GroupChat = require("../models/GroupChat");
+    const Message = require("../models/Message");
+    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const studentIds = registrations.map((r) => r.studentId);
+
+    // Notify each registered student
+    const notifPromises = studentIds.map((studentId) =>
+      Notification.create({
+        userId: studentId,
+        type: "session_cancelled",
+        message: `The session "${session.title}" has been cancelled by the host. We're sorry for the inconvenience.`,
+        meta: { sessionId: session._id, sessionTitle: session.title },
+      })
+    );
+    const studentNotifs = await Promise.all(notifPromises);
+
+    // Deactivate the group and post a system message
+    const group = await GroupChat.findOne({ sessionId: id, isActive: true });
+    if (group) {
+      // Post system message before deactivating
+      const cancelMsg = await Message.create({
+        senderId: req.user.userId,
+        groupId: group._id,
+        type: "group",
+        content: `This session has been cancelled by the host. This group is now closed.`,
+        isSystem: true,
+        readBy: [],
+      });
+
+      // Deactivate the group
+      await GroupChat.findByIdAndUpdate(group._id, { isActive: false });
+
+      // Broadcast to all group members via socket
+      const io = req.app.get("io");
+      if (io) {
+        const populatedMsg = await cancelMsg.populate("senderId", "name role");
+        io.to(`group:${group._id}`).emit("group:receive", populatedMsg);
+        io.to(`group:${group._id}`).emit("group:deactivated", { groupId: group._id });
+      }
+    }
+
+    // Push live notifications to online students
+    const { onlineUsers } = require("../socket/socket");
+    const io = req.app.get("io");
+    studentNotifs.forEach((notif, i) => {
+      const socketId = onlineUsers.get(studentIds[i].toString());
+      if (socketId && io) io.to(socketId).emit("notification:new", notif);
+    });
+
     await Session.findByIdAndDelete(id);
 
     res.status(200).json({ success: true, message: "Session deleted successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: "Error deleting session", error: error.message });
   }
 };
@@ -281,6 +368,7 @@ exports.getAlumniById = async (req, res) => {
 
     const reviews = await Review.find({ alumniId: alumni.userId })
       .populate("studentId", "name")
+      .populate("sessionId", "title")
       .sort({ createdAt: -1 });
 
     res.json({ success: true, alumni, user: alumni.userId, sessions, reviews });
@@ -332,6 +420,182 @@ exports.searchAlumni = async (req, res) => {
       .sort(sortOption);
 
     res.json({ success: true, alumni });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getSessionParticipants = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const alumni = await Alumni.findOne({ userId: req.user.userId });
+    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+
+    const session = await Session.findById(id);
+    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+
+    if (session.alumniId.toString() !== alumni._id.toString()) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    const registrations = await Registration.find({ sessionId: id })
+      .populate("studentId", "name email")
+      .sort({ createdAt: -1 });
+
+    // Enrich with student profile (department, batchYear, profileImage)
+    const participants = await Promise.all(
+      registrations.map(async (reg) => {
+        const profile = await StudentProfile.findOne({ userId: reg.studentId._id });
+        return {
+          _id: reg._id,
+          registeredAt: reg.createdAt,
+          paymentStatus: reg.paymentStatus,
+          attended: reg.attended,
+          student: {
+            _id: reg.studentId._id,
+            name: reg.studentId.name,
+            email: reg.studentId.email,
+            department: profile?.department || null,
+            batchYear: profile?.batchYear || null,
+            profileImage: profile?.profileImage || null,
+          },
+        };
+      })
+    );
+
+    res.json({ success: true, participants, total: participants.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getNotifications = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    // Alumni should never see group_invite notifications — those are student-only
+    const notifications = await Notification.find({ userId, type: { $ne: "group_invite" } })
+      .sort({ createdAt: -1 })
+      .limit(50);
+    const unreadCount = await Notification.countDocuments({ userId, isRead: false, type: { $ne: "group_invite" } });
+    res.json({ success: true, notifications, unreadCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.markNotificationsRead = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    await Notification.updateMany({ userId, isRead: false }, { isRead: true });
+    res.json({ success: true, message: "Notifications marked as read" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.startSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { meetLink } = req.body;
+    const alumni = await Alumni.findOne({ userId: req.user.userId });
+    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+
+    const session = await Session.findById(id);
+    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    if (session.alumniId.toString() !== alumni._id.toString())
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    if (session.status !== "scheduled")
+      return res.status(400).json({ success: false, message: `Session is already ${session.status}` });
+    if (!meetLink || !meetLink.trim())
+      return res.status(400).json({ success: false, message: "Meet link is required to start the session" });
+
+    // Allow starting within ±60 minutes of scheduled start time
+    const now = new Date();
+    const diff = Math.abs(now - new Date(session.startTime)) / 60000;
+    if (diff > 60)
+      return res.status(400).json({ success: false, message: "You can only start the session within 60 minutes of the scheduled start time" });
+
+    const updated = await Session.findByIdAndUpdate(
+      id,
+      { status: "live", meetLink: meetLink.trim(), actualStartTime: now },
+      { new: true }
+    );
+
+    // Notify all registered students that the session is live
+    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const { onlineUsers } = require("../socket/socket");
+    const io = req.app.get("io");
+    await Promise.all(
+      registrations.map(async (reg) => {
+        const notif = await Notification.create({
+          userId: reg.studentId,
+          type: "session_live",
+          message: `"${session.title}" is now live! Click to join.`,
+          meta: { sessionId: session._id, sessionTitle: session.title },
+        });
+        const socketId = onlineUsers.get(reg.studentId.toString());
+        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+      })
+    );
+
+    res.json({ success: true, message: "Session started", session: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.endSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const alumni = await Alumni.findOne({ userId: req.user.userId });
+    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+
+    const session = await Session.findById(id);
+    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    if (session.alumniId.toString() !== alumni._id.toString())
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    if (session.status !== "live")
+      return res.status(400).json({ success: false, message: "Session is not currently live" });
+
+    // Must have run for at least 50% of scheduled duration
+    const now = new Date();
+    const elapsed = (now - new Date(session.actualStartTime)) / 60000;
+    const minDuration = session.duration * 0.5;
+    if (elapsed < minDuration)
+      return res.status(400).json({
+        success: false,
+        message: `Session must run for at least ${Math.ceil(minDuration)} minutes before ending`,
+      });
+
+    const updated = await Session.findByIdAndUpdate(
+      id,
+      { status: "completed", meetLink: null, actualEndTime: now },
+      { new: true }
+    );
+
+    // Notify registered students that session is complete
+    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const { onlineUsers } = require("../socket/socket");
+    const io = req.app.get("io");
+    await Promise.all(
+      registrations.map(async (reg) => {
+        const notif = await Notification.create({
+          userId: reg.studentId,
+          type: "session_completed",
+          message: `"${session.title}" has ended. You can now leave a review!`,
+          meta: { sessionId: session._id, sessionTitle: session.title },
+        });
+        const socketId = onlineUsers.get(reg.studentId.toString());
+        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+      })
+    );
+
+    res.json({ success: true, message: "Session ended", session: updated });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Server error" });

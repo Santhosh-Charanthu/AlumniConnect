@@ -1,5 +1,3 @@
-/* Loading / not found states */
-.profile-loading,
 .profile-not-found {
   display: flex;
   justify-content: center;
@@ -25,9 +23,7 @@
   transition: background 0.2s;
 }
 
-.pub-back-btn:hover {
-  background: #f3f4f6;
-}
+.pub-back-btn:hover { background: #f3f4f6; }
 
 /* Sessions tab */
 .pub-sessions-list {
@@ -40,21 +36,22 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 16px;
   transition: box-shadow 0.2s;
 }
 
-.pub-session-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
+.pub-session-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 
 .pub-session-info h4 {
   font-size: 0.95rem;
   font-weight: 600;
   color: #111827;
   margin: 0 0 8px;
+  word-break: break-word;
 }
 
 .pub-session-meta {
@@ -76,6 +73,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .pub-session-price {
@@ -89,12 +87,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
-.pub-reviews-header h3 {
-  margin: 0;
-}
+.pub-reviews-header h3 { margin: 0; }
 
 .pub-avg-rating {
   display: flex;
@@ -105,11 +103,7 @@
   color: #111827;
 }
 
-.pub-review-count {
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: #6b7280;
-}
+.pub-review-count { font-size: 0.85rem; font-weight: 400; color: #6b7280; }
 
 .pub-reviews-list {
   display: flex;
@@ -127,33 +121,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 8px;
 }
 
-.pub-reviewer-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #111827;
-}
+.pub-reviewer-name { font-weight: 600; font-size: 0.9rem; color: #111827; }
+.pub-review-stars  { display: flex; gap: 2px; }
+.pub-review-comment{ font-size: 0.88rem; color: #374151; line-height: 1.5; margin: 0 0 8px; word-break: break-word; }
+.pub-review-date   { font-size: 0.78rem; color: #9ca3af; }
 
-.pub-review-stars {
-  display: flex;
-  gap: 2px;
-}
-
-.pub-review-comment {
-  font-size: 0.88rem;
-  color: #374151;
-  line-height: 1.5;
-  margin: 0 0 8px;
-}
-
-.pub-review-date {
-  font-size: 0.78rem;
-  color: #9ca3af;
-}
-
-/* Certificate link */
 .certificate-link {
   display: inline-block;
   margin-top: 10px;
@@ -161,3 +138,44 @@
   color: #2563eb;
   text-decoration: underline;
 }
+
+/* ── Responsive ── */
+@media (max-width: 420px) {
+  .pub-back-btn { padding: 6px 10px; font-size: 0.82rem; margin-bottom: 16px; }
+  .pub-session-card { padding: 12px; }
+  .pub-session-right { align-items: flex-start; }
+  .pub-review-card { padding: 12px; }
+}
+
+@media (max-width: 360px) {
+  .pub-back-btn { font-size: 0.78rem; }
+  .pub-session-info h4 { font-size: 0.88rem; }
+  .pub-session-meta { font-size: 0.76rem; gap: 8px; }
+  .pub-review-comment { font-size: 0.82rem; }
+}
+
+@media (max-width: 300px) {
+  .pub-back-btn { padding: 5px 8px; font-size: 0.75rem; }
+  .pub-session-card { padding: 10px; }
+  .pub-review-card { padding: 10px; }
+  .pub-session-price { font-size: 0.9rem; }
+}
+
+/* Message button on alumni profile */
+.alumni-profile-msg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ff7a18, #e06010);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.alumni-profile-msg-btn:hover { opacity: 0.88; }

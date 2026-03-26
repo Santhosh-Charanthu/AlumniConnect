@@ -1,15 +1,13 @@
-/* Page wrapper */
 .student-profile {
   padding: 30px;
 }
 
-/* Centered card */
 .profile-card {
   max-width: 680px;
   margin: 0 auto;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.07);
   padding: 32px;
 }
 
@@ -21,25 +19,22 @@
   margin-bottom: 24px;
 }
 
-/* Avatar container */
 .avatar-wrapper {
   position: relative;
   width: fit-content;
   flex-shrink: 0;
 }
 
-/* Circular image */
 .avatar-img {
   width: 100px;
   height: 100px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #fff;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
   display: block;
 }
 
-/* Gray placeholder circle */
 .avatar-placeholder {
   width: 100px;
   height: 100px;
@@ -50,7 +45,6 @@
   justify-content: center;
 }
 
-/* Camera overlay on avatar in edit mode */
 .avatar-edit-overlay {
   position: absolute;
   bottom: 0;
@@ -62,20 +56,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Profile info block */
 .profile-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .profile-info h2 {
   font-size: 22px;
   font-weight: 700;
   margin: 0;
+  word-break: break-word;
 }
 
 .profile-role {
@@ -91,12 +86,11 @@
   font-size: 13px;
   color: #9ca3af;
   margin: 0;
+  word-break: break-word;
 }
 
-/* Interests section */
-.interests-section {
-  margin-bottom: 24px;
-}
+/* Interests */
+.interests-section { margin-bottom: 24px; }
 
 .interests-section h4 {
   display: flex;
@@ -114,7 +108,6 @@
   gap: 8px;
 }
 
-/* Interest pill tag */
 .interest-tag {
   display: inline-flex;
   align-items: center;
@@ -137,7 +130,7 @@
   color: #ff7a18;
 }
 
-/* Edit profile button */
+/* Buttons */
 .btn-edit-profile {
   display: inline-flex;
   align-items: center;
@@ -153,18 +146,14 @@
   transition: background 0.2s;
 }
 
-.btn-edit-profile:hover {
-  background: #e86d10;
-}
+.btn-edit-profile:hover { background: #e86d10; }
 
-/* Edit form container */
 .edit-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-/* Label + input stacked */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -184,13 +173,12 @@
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.form-group input:focus {
-  border-color: #ff7a18;
-}
+.form-group input:focus { border-color: #ff7a18; }
 
-/* Interest input row */
 .interests-input-row {
   display: flex;
   gap: 8px;
@@ -203,27 +191,19 @@
   border-radius: 8px;
   font-size: 14px;
   outline: none;
+  min-width: 0;
 }
 
-.interests-input-row input:focus {
-  border-color: #ff7a18;
-}
+.interests-input-row input:focus { border-color: #ff7a18; }
 
-/* Error text */
-.form-error {
-  color: #dc2626;
-  font-size: 13px;
-  margin: 0;
-}
+.form-error { color: #dc2626; font-size: 13px; margin: 0; }
 
-/* Save/cancel row */
 .form-actions {
   display: flex;
   gap: 10px;
-  margin-top: 4px;
+  flex-wrap: wrap;
 }
 
-/* Primary button */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -239,11 +219,8 @@
   transition: background 0.2s;
 }
 
-.btn-primary:hover {
-  background: #e86d10;
-}
+.btn-primary:hover { background: #e86d10; }
 
-/* Secondary button */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -259,22 +236,46 @@
   transition: background 0.2s;
 }
 
-.btn-secondary:hover {
-  background: #ffd0b0;
+.btn-secondary:hover { background: #ffd0b0; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .student-profile { padding: 16px; }
+  .profile-card { padding: 20px; }
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .profile-hero {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+@media (max-width: 540px) {
+  .profile-hero { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .profile-card { padding: 16px; }
+}
 
-  .student-profile {
-    padding: 16px;
-  }
+@media (max-width: 420px) {
+  .student-profile { padding: 10px; }
+  .profile-card { padding: 14px; border-radius: 12px; }
+  .profile-info h2 { font-size: 18px; }
+  .avatar-img, .avatar-placeholder { width: 80px; height: 80px; }
+  .btn-edit-profile { padding: 8px 14px; font-size: 13px; }
+  .btn-primary, .btn-secondary { padding: 8px 14px; font-size: 13px; }
+  .interest-tag { font-size: 12px; padding: 4px 10px; }
+}
 
-  .profile-card {
-    padding: 20px;
-  }
+@media (max-width: 360px) {
+  .student-profile { padding: 8px; }
+  .profile-card { padding: 12px; border-radius: 10px; }
+  .profile-info h2 { font-size: 16px; }
+  .profile-role { font-size: 13px; }
+  .profile-meta { font-size: 12px; }
+  .avatar-img, .avatar-placeholder { width: 70px; height: 70px; }
+  .interests-input-row { flex-direction: column; }
+  .form-group input { font-size: 13px; }
+}
+
+@media (max-width: 300px) {
+  .student-profile { padding: 6px; }
+  .profile-card { padding: 10px; border-radius: 8px; }
+  .profile-info h2 { font-size: 14px; }
+  .avatar-img, .avatar-placeholder { width: 60px; height: 60px; }
+  .btn-edit-profile { width: 100%; justify-content: center; }
+  .form-actions { flex-direction: column; }
+  .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
 }

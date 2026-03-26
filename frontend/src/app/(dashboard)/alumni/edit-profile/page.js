@@ -70,7 +70,7 @@ export default function EditProfilePage() {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/alumni/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -127,7 +127,7 @@ export default function EditProfilePage() {
 
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://localhost:5000/api/alumni/profile", {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,

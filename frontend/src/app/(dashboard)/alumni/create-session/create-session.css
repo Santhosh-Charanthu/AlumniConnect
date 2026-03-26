@@ -15,6 +15,7 @@
 
 .form-container h2 {
   margin-bottom: 20px;
+  font-size: 22px;
 }
 
 /* Form */
@@ -40,6 +41,9 @@
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Row layout */
@@ -50,6 +54,7 @@
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0;
 }
 
 /* Image preview */
@@ -70,6 +75,9 @@
   border-radius: 8px;
   cursor: pointer;
   margin-top: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  width: 100%;
 }
 
 /* Upload box */
@@ -102,4 +110,49 @@
   color: #94a3b8;
   margin-top: 6px;
   display: block;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .create-session {
+    padding: 16px;
+  }
+
+  .form-container {
+    padding: 18px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .create-session {
+    padding: 10px;
+  }
+
+  .form-container {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .form-container h2 {
+    font-size: 18px;
+  }
+
+  .upload-box {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 300px) {
+  .create-session {
+    padding: 6px;
+  }
+
+  .form-container {
+    padding: 10px;
+  }
 }
