@@ -138,7 +138,7 @@ export default function TermsPage() {
 
         <div className="legal-section">
           <h2>13. Contact</h2>
-          <p>For questions about these terms, contact us at <strong>legal@alumniconnect.app</strong> or visit our <Link href="/contact" style={{ color: "#ff7a18" }}>Contact page</Link>.</p>
+          <p>For questions about these terms, contact us at <strong>alumniconnect455@gmail.com</strong> or visit our <Link href="/contact" style={{ color: "#ff7a18" }}>Contact page</Link>.</p>
         </div>
       </div>
 
