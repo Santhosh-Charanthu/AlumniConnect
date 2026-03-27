@@ -1,15 +1,20 @@
 .layout {
   display: flex;
+  min-height: 100vh;
 }
 
 .main {
-  margin-left: 64px; /* collapsed sidebar width */
+  margin-left: 64px;
   width: calc(100% - 64px);
-  transition: none; /* content doesn't shift — sidebar overlaps on hover */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: none;
 }
 
 .content {
   padding: 16px;
+  flex: 1;
 }
 
 /* Tablet / mobile */
@@ -17,6 +22,7 @@
   .main {
     margin-left: 0;
     width: 100%;
+    min-height: 100vh;
   }
 
   .content {

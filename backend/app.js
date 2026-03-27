@@ -12,6 +12,7 @@ const projectRoutes = require("./routes/project.routes");
 const alumniRoutes = require("./routes/alumni.routes");
 const studentRoutes = require("./routes/student.routes");
 const chatRoutes = require("./routes/chat.routes");
+const contactRoutes = require("./routes/contact.routes");
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -24,7 +25,7 @@ const io = initSocket(httpServer);
 app.set("io", io);
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3001",
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
   credentials: true,
 }));
 app.use(express.json());
@@ -36,6 +37,7 @@ app.use("/api/achievements", achievementRoutes);
 app.use("/api/alumni", alumniRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

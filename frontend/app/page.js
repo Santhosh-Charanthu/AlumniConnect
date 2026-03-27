@@ -3,7 +3,7 @@ import Link from "next/link";
 import {
   BookOpen, MessageCircle, Compass, Globe,
   ArrowRight, Users, CalendarCheck, Star,
-  Sparkles, ChevronRight, Zap, TrendingUp
+  Sparkles, ChevronRight, Zap, TrendingUp, ShieldCheck, CreditCard, RotateCcw
 } from "lucide-react";
 import "./landing.css";
 
@@ -152,6 +152,40 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Payments ── */}
+      <section className="lp-section">
+        <div className="lp-section-inner">
+          <p className="lp-section-label">Secure Payments</p>
+          <h2 className="lp-section-title">Pay safely, learn confidently</h2>
+          <p className="lp-section-sub">All session payments are processed through <strong>Razorpay</strong>, India's leading payment gateway. Your financial data is always protected.</p>
+          <div className="lp-payment-grid">
+            <div className="lp-payment-card">
+              <div className="lp-payment-icon"><ShieldCheck size={22} /></div>
+              <h3>PCI-DSS Secure</h3>
+              <p>Razorpay is fully PCI-DSS compliant. We never store your card or UPI details.</p>
+            </div>
+            <div className="lp-payment-card">
+              <div className="lp-payment-icon"><CreditCard size={22} /></div>
+              <h3>Multiple Payment Methods</h3>
+              <p>Pay via UPI, credit/debit cards, net banking, or wallets — whatever works for you.</p>
+            </div>
+            <div className="lp-payment-card">
+              <div className="lp-payment-icon"><RotateCcw size={22} /></div>
+              <h3>Hassle-Free Refunds</h3>
+              <p>Cancel 24+ hours before a session for a full refund. Alumni cancellations are always fully refunded.</p>
+            </div>
+          </div>
+          <div className="lp-payment-note">
+            <span>Powered by</span>
+            <span className="lp-razorpay-badge">Razorpay</span>
+            <span>·</span>
+            <Link href="/refund-policy" className="lp-payment-link">Refund Policy</Link>
+            <span>·</span>
+            <Link href="/terms" className="lp-payment-link">Terms</Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA banner ── */}
       <section className="lp-cta-banner">
         <div className="lp-cta-inner">
@@ -181,7 +215,16 @@ export default function LandingPage() {
           <Sparkles size={15} className="lp-logo-icon" />
           AlumniConnect
         </span>
-        <p>© {new Date().getFullYear()} AlumniConnect. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Alumni Connect. All rights reserved.</p>
+        <div className="lp-footer-links">
+          <Link href="/privacy">Privacy Policy</Link>
+          <span>|</span>
+          <Link href="/terms">Terms</Link>
+          <span>|</span>
+          <Link href="/refund-policy">Refund Policy</Link>
+          <span>|</span>
+          <Link href="/contact">Contact</Link>
+        </div>
       </footer>
     </div>
   );

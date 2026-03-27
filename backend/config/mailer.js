@@ -31,4 +31,36 @@ const sendOtpEmail = async (to, otp) => {
   });
 };
 
-module.exports = { sendOtpEmail };
+const sendContactEmail = async ({ name, email, subject, message }) => {
+  const subjectLabels = {
+    general: "General Enquiry",
+    account: "Account Issue",
+    session: "Session or Booking",
+    payment: "Payment",
+    report: "Report a User",
+    other: "Other",
+  };
+
+  await transporter.sendMail({
+    from: `"AlumniConnect Contact" <${process.env.EMAIL_USER}>`,
+    to: "alumniconnect455@gmail.com",
+    replyTo: email,
+    subject: `[Contact Form] ${subjectLabels[subject] || subject} — ${name}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:auto;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
+        <h2 style="color:#0f172a;margin-bottom:4px;">New Contact Form Submission</h2>
+        <p style="color:#94a3b8;font-size:13px;margin-bottom:24px;">Received via AlumniConnect contact page</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <tr><td style="padding:8px 0;color:#64748b;width:100px;">Name</td><td style="padding:8px 0;color:#0f172a;font-weight:600;">${name}</td></tr>
+          <tr><td style="padding:8px 0;color:#64748b;">Email</td><td style="padding:8px 0;color:#0f172a;"><a href="mailto:${email}" style="color:#ff7a18;">${email}</a></td></tr>
+          <tr><td style="padding:8px 0;color:#64748b;">Subject</td><td style="padding:8px 0;color:#0f172a;">${subjectLabels[subject] || subject}</td></tr>
+        </table>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;" />
+        <p style="color:#64748b;font-size:13px;margin-bottom:8px;">Message</p>
+        <p style="color:#0f172a;font-size:15px;line-height:1.7;white-space:pre-wrap;">${message}</p>
+      </div>
+    `,
+  });
+};
+
+module.exports = { sendOtpEmail, sendContactEmail };
