@@ -1,6 +1,7 @@
 .layout {
   display: flex;
   min-height: 100vh;
+  background: #f6f9fc;
 }
 
 .main {
@@ -9,20 +10,27 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #f6f9fc;
   transition: none;
 }
 
 .content {
-  padding: 16px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
+.content--no-pad {
+  padding: 0;
+}
+ 
 /* Tablet / mobile */
 @media (max-width: 768px) {
   .main {
     margin-left: 0;
     width: 100%;
-    min-height: 100vh;
   }
 
   .content {

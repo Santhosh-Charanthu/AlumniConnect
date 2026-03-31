@@ -522,3 +522,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Validation error */
+.fieldError {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}

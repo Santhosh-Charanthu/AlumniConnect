@@ -54,3 +54,9 @@
   gap: 12px;
   margin-top: 22px; /* 🔥 separation from textarea */
 }
+
+.field-error {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}

@@ -9,13 +9,22 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "general", message: "" });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const errs = {};
+    if (!form.name.trim()) errs.name = "Name is required.";
+    if (!form.email.trim()) errs.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    if (!form.message.trim()) errs.message = "Message is required.";
+    else if (form.message.trim().length < 10) errs.message = "Message must be at least 10 characters.";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contact`, {
@@ -99,8 +108,8 @@ export default function ContactPage() {
                     placeholder="Jane Smith"
                     value={form.name}
                     onChange={handleChange}
-                    required
                   />
+                  {errors.name && <p className="field-error">{errors.name}</p>}
                 </div>
                 <div className="form-group">
                   <label htmlFor="email">Email address</label>
@@ -111,8 +120,8 @@ export default function ContactPage() {
                     placeholder="jane@example.com"
                     value={form.email}
                     onChange={handleChange}
-                    required
                   />
+                  {errors.email && <p className="field-error">{errors.email}</p>}
                 </div>
               </div>
 
@@ -136,8 +145,8 @@ export default function ContactPage() {
                   placeholder="Describe your issue or question..."
                   value={form.message}
                   onChange={handleChange}
-                  required
                 />
+                {errors.message && <p className="field-error">{errors.message}</p>}
               </div>
 
               <button type="submit" className="contact-submit" disabled={loading}>

@@ -39,98 +39,122 @@ function initSocket(httpServer) {
 
     // Auto-join all group rooms this user belongs to (including inactive, to receive deactivation events)
     try {
-      const groups = await GroupChat.find({ "members.user": userId }).select("_id");
+      const groups = await GroupChat.find({ "members.user": userId }).select(
+        "_id",
+      );
       groups.forEach((g) => socket.join(`group:${g._id}`));
     } catch (err) {
       console.error("Socket join groups error:", err.message);
     }
 
-    // ── Direct message ─────────────────────────────────────────
-    socket.on("dm:send", async ({ to, content, mediaUrl, mediaType, mediaName }, ack) => {
+    // ── Join a specific group room on demand ───────────────────
+    // Called by the frontend when navigating to a group chat
+    // to ensure the socket is in the room even if it was created after initial connect
+    socket.on("group:join_room", async ({ groupId }) => {
       try {
-        if (!content?.trim() && !mediaUrl) {
-          if (ack) ack({ success: false, error: "Empty message" });
-          return;
-        }
-        const msg = await Message.create({
-          senderId: userId,
-          receiverId: to,
-          type: "direct",
-          content: content?.trim() || "",
-          mediaUrl: mediaUrl || null,
-          mediaType: mediaType || null,
-          mediaName: mediaName || null,
-        });
-
-        const populated = await msg.populate("senderId", "name role");
-
-        // Deliver to recipient if online
-        const recipientSocket = onlineUsers.get(to);
-        if (recipientSocket) {
-          io.to(recipientSocket).emit("dm:receive", populated);
-        }
-
-        // Echo back to sender
-        socket.emit("dm:receive", populated);
-
-        if (ack) ack({ success: true, message: populated });
-      } catch (err) {
-        if (ack) ack({ success: false, error: err.message });
-      }
-    });
-
-    // ── Group message ──────────────────────────────────────────
-    socket.on("group:send", async ({ groupId, content, mediaUrl, mediaType, mediaName }, ack) => {
-      try {
-        // Verify sender is a member
         const group = await GroupChat.findOne({
           _id: groupId,
           "members.user": userId,
-          isActive: true,
-        });
-        if (!group) {
-          if (ack) ack({ success: false, error: "Not a member of this group" });
-          return;
-        }
-
-        if (!content?.trim() && !mediaUrl) {
-          if (ack) ack({ success: false, error: "Empty message" });
-          return;
-        }
-
-        const msg = await Message.create({
-          senderId: userId,
-          groupId,
-          type: "group",
-          content: content?.trim() || "",
-          readBy: [userId],
-          mediaUrl: mediaUrl || null,
-          mediaType: mediaType || null,
-          mediaName: mediaName || null,
-        });
-
-        // Update group's lastMessage
-        await GroupChat.findByIdAndUpdate(groupId, {
-          lastMessage: msg._id,
-          lastMessageAt: msg.createdAt,
-        });
-
-        const populated = await msg.populate("senderId", "name role");
-
-        // Broadcast to everyone in the room (including sender)
-        io.to(`group:${groupId}`).emit("group:receive", populated);
-
-        if (ack) ack({ success: true, message: populated });
+        }).select("_id");
+        if (group) socket.join(`group:${group._id}`);
       } catch (err) {
-        if (ack) ack({ success: false, error: err.message });
+        console.error("group:join_room error:", err.message);
       }
     });
+
+    // ── Direct message ─────────────────────────────────────────
+    socket.on(
+      "dm:send",
+      async ({ to, content, mediaUrl, mediaType, mediaName }, ack) => {
+        try {
+          if (!content?.trim() && !mediaUrl) {
+            if (ack) ack({ success: false, error: "Empty message" });
+            return;
+          }
+          const msg = await Message.create({
+            senderId: userId,
+            receiverId: to,
+            type: "direct",
+            content: content?.trim() || "",
+            mediaUrl: mediaUrl || null,
+            mediaType: mediaType || null,
+            mediaName: mediaName || null,
+          });
+
+          const populated = await msg.populate("senderId", "name role");
+
+          // Deliver to recipient if online
+          const recipientSocket = onlineUsers.get(to);
+          if (recipientSocket) {
+            io.to(recipientSocket).emit("dm:receive", populated);
+          }
+
+          // Echo back to sender
+          socket.emit("dm:receive", populated);
+
+          if (ack) ack({ success: true, message: populated });
+        } catch (err) {
+          if (ack) ack({ success: false, error: err.message });
+        }
+      },
+    );
+
+    // ── Group message ──────────────────────────────────────────
+    socket.on(
+      "group:send",
+      async ({ groupId, content, mediaUrl, mediaType, mediaName }, ack) => {
+        try {
+          // Verify sender is a member
+          const group = await GroupChat.findOne({
+            _id: groupId,
+            "members.user": userId,
+            isActive: true,
+          });
+          if (!group) {
+            if (ack)
+              ack({ success: false, error: "Not a member of this group" });
+            return;
+          }
+
+          if (!content?.trim() && !mediaUrl) {
+            if (ack) ack({ success: false, error: "Empty message" });
+            return;
+          }
+
+          const msg = await Message.create({
+            senderId: userId,
+            groupId,
+            type: "group",
+            content: content?.trim() || "",
+            readBy: [userId],
+            mediaUrl: mediaUrl || null,
+            mediaType: mediaType || null,
+            mediaName: mediaName || null,
+          });
+
+          // Update group's lastMessage
+          await GroupChat.findByIdAndUpdate(groupId, {
+            lastMessage: msg._id,
+            lastMessageAt: msg.createdAt,
+          });
+
+          const populated = await msg.populate("senderId", "name role");
+
+          // Broadcast to everyone in the room (including sender)
+          io.to(`group:${groupId}`).emit("group:receive", populated);
+
+          if (ack) ack({ success: true, message: populated });
+        } catch (err) {
+          if (ack) ack({ success: false, error: err.message });
+        }
+      },
+    );
 
     // ── Mark DMs as read ───────────────────────────────────────
     socket.on("dm:read", async ({ from }) => {
       await Message.updateMany(
         { senderId: from, receiverId: userId, isRead: false },
-        { isRead: true }
+        { isRead: true },
       );
       const senderSocket = onlineUsers.get(from);
       if (senderSocket) {
@@ -152,7 +176,7 @@ function initSocket(httpServer) {
 
         await Message.updateMany(
           { groupId, readBy: { $ne: userId } },
-          { $addToSet: { readBy: userId } }
+          { $addToSet: { readBy: userId } },
         );
 
         // Get total member count for this group
@@ -160,7 +184,9 @@ function initSocket(httpServer) {
         const totalMembers = group?.members?.length || 0;
 
         // Notify senders whose messages are now fully read
-        const senderIds = [...new Set(unread.map((m) => m.senderId.toString()))];
+        const senderIds = [
+          ...new Set(unread.map((m) => m.senderId.toString())),
+        ];
         for (const senderId of senderIds) {
           const senderSocket = onlineUsers.get(senderId);
           if (senderSocket) {
@@ -181,7 +207,8 @@ function initSocket(httpServer) {
       try {
         const msg = await Message.findOne({ _id: messageId, senderId: userId });
         if (!msg) {
-          if (ack) ack({ success: false, error: "Message not found or not yours" });
+          if (ack)
+            ack({ success: false, error: "Message not found or not yours" });
           return;
         }
         msg.content = content.trim();
@@ -195,7 +222,8 @@ function initSocket(httpServer) {
           io.to(`group:${msg.groupId}`).emit("message:edited", populated);
         } else {
           const recipientSocket = onlineUsers.get(msg.receiverId.toString());
-          if (recipientSocket) io.to(recipientSocket).emit("message:edited", populated);
+          if (recipientSocket)
+            io.to(recipientSocket).emit("message:edited", populated);
           socket.emit("message:edited", populated);
         }
 
@@ -210,7 +238,8 @@ function initSocket(httpServer) {
       try {
         const msg = await Message.findOne({ _id: messageId, senderId: userId });
         if (!msg) {
-          if (ack) ack({ success: false, error: "Message not found or not yours" });
+          if (ack)
+            ack({ success: false, error: "Message not found or not yours" });
           return;
         }
 
@@ -222,7 +251,8 @@ function initSocket(httpServer) {
           io.to(`group:${groupId}`).emit("message:deleted", { messageId });
         } else {
           const recipientSocket = onlineUsers.get(receiverId?.toString());
-          if (recipientSocket) io.to(recipientSocket).emit("message:deleted", { messageId });
+          if (recipientSocket)
+            io.to(recipientSocket).emit("message:deleted", { messageId });
           socket.emit("message:deleted", { messageId });
         }
 
@@ -238,7 +268,8 @@ function initSocket(httpServer) {
         socket.to(`group:${groupId}`).emit("typing:start", { userId, groupId });
       } else if (to) {
         const recipientSocket = onlineUsers.get(to);
-        if (recipientSocket) io.to(recipientSocket).emit("typing:start", { userId });
+        if (recipientSocket)
+          io.to(recipientSocket).emit("typing:start", { userId });
       }
     });
 
@@ -247,7 +278,8 @@ function initSocket(httpServer) {
         socket.to(`group:${groupId}`).emit("typing:stop", { userId, groupId });
       } else if (to) {
         const recipientSocket = onlineUsers.get(to);
-        if (recipientSocket) io.to(recipientSocket).emit("typing:stop", { userId });
+        if (recipientSocket)
+          io.to(recipientSocket).emit("typing:stop", { userId });
       }
     });
 

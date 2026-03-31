@@ -69,3 +69,9 @@
 .present-checkbox input {
   accent-color: #38bdf8; /* sky blue */
 }
+
+.field-error {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}

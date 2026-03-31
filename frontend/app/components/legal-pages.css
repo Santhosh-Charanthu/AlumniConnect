@@ -286,3 +286,9 @@
   .legal-hero { padding: 40px 5% 36px; }
   .legal-body { padding: 32px 5% 48px; }
 }
+
+.field-error {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+}

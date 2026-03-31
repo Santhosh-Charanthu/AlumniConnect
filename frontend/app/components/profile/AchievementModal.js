@@ -9,11 +9,27 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
     year: "",
     certificateUrl: "",
   });
+  const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
+
+  const handleSave = () => {
+    const errs = {};
+    if (!form.title.trim()) errs.title = "Title is required.";
+    if (!form.description.trim()) errs.description = "Description is required.";
+    if (!form.year) errs.year = "Year is required.";
+    else if (!/^\d{4}$/.test(form.year) || Number(form.year) < 1900 || Number(form.year) > new Date().getFullYear())
+      errs.year = "Enter a valid year.";
+    if (form.certificateUrl) {
+      try { new URL(form.certificateUrl); } catch { errs.certificateUrl = "Enter a valid URL."; }
+    }
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    onSave(form);
   };
 
   return (
@@ -29,6 +45,7 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
             value={form.title}
             onChange={handleChange}
           />
+          {errors.title && <p className="field-error">{errors.title}</p>}
         </div>
 
         <div className="form-group">
@@ -40,6 +57,7 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
             value={form.description}
             onChange={handleChange}
           />
+          {errors.description && <p className="field-error">{errors.description}</p>}
         </div>
 
         <div className="form-group">
@@ -51,6 +69,7 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
             value={form.year}
             onChange={handleChange}
           />
+          {errors.year && <p className="field-error">{errors.year}</p>}
         </div>
 
         <div className="form-group">
@@ -61,6 +80,7 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
             value={form.certificateUrl}
             onChange={handleChange}
           />
+          {errors.certificateUrl && <p className="field-error">{errors.certificateUrl}</p>}
         </div>
 
         <div className="modal-actions">
@@ -68,16 +88,7 @@ export default function AchievementModal({ isOpen, onClose, onSave }) {
             Cancel
           </button>
 
-          <button
-            className="btn primary"
-            onClick={() => onSave(form)}
-            disabled={
-              !form.title ||
-              !form.description ||
-              !form.year ||
-              !form.certificateUrl
-            }
-          >
+          <button className="btn primary" onClick={handleSave}>
             Done
           </button>
         </div>

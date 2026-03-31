@@ -11,11 +11,32 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
     isPresent: false,
     description: "",
   });
+  const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
+
+  const handleSave = () => {
+    const errs = {};
+    if (!form.company.trim()) errs.company = "Company is required.";
+    if (!form.role.trim()) errs.role = "Role is required.";
+    if (!form.startDate) errs.startDate = "Start date is required.";
+    if (!form.isPresent && !form.endDate) errs.endDate = "End date is required.";
+    if (!form.isPresent && form.endDate && form.startDate && new Date(form.endDate) <= new Date(form.startDate))
+      errs.endDate = "End date must be after start date.";
+    if (!form.description.trim()) errs.description = "Description is required.";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    onSave({
+      company: form.company,
+      role: form.role,
+      startDate: form.startDate,
+      endDate: form.isPresent ? null : form.endDate,
+      description: form.description,
+    });
   };
 
   return (
@@ -31,6 +52,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
             value={form.company}
             onChange={handleChange}
           />
+          {errors.company && <p className="field-error">{errors.company}</p>}
         </div>
 
         <div className="form-group">
@@ -41,6 +63,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
             value={form.role}
             onChange={handleChange}
           />
+          {errors.role && <p className="field-error">{errors.role}</p>}
         </div>
 
         <div className="date-row">
@@ -52,6 +75,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
               value={form.startDate}
               onChange={handleChange}
             />
+            {errors.startDate && <p className="field-error">{errors.startDate}</p>}
           </div>
 
           <div className="form-group">
@@ -63,6 +87,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
               onChange={handleChange}
               disabled={form.isPresent}
             />
+            {errors.endDate && <p className="field-error">{errors.endDate}</p>}
           </div>
         </div>
 
@@ -91,6 +116,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
             value={form.description}
             onChange={handleChange}
           />
+          {errors.description && <p className="field-error">{errors.description}</p>}
         </div>
 
         <div className="modal-actions">
@@ -98,24 +124,7 @@ export default function ExperienceModal({ isOpen, onClose, onSave }) {
             Cancel
           </button>
 
-          <button
-            className="btn primary"
-            onClick={() =>
-              onSave({
-                company: form.company,
-                role: form.role,
-                startDate: form.startDate,
-                endDate: form.isPresent ? null : form.endDate,
-                description: form.description,
-              })
-            }
-            disabled={
-              !form.company ||
-              !form.role ||
-              !form.startDate ||
-              !form.description
-            }
-          >
+          <button className="btn primary" onClick={handleSave}>
             Done
           </button>
         </div>

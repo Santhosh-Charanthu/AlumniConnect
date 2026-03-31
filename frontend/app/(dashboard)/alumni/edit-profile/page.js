@@ -12,6 +12,7 @@ export default function EditProfilePage() {
   const [role, setRole] = useState("alumni"); // fixed for edit
   const [form, setForm] = useState({});
   const [image, setImage] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const [branchOpen, setBranchOpen] = useState(false);
   const [branch, setBranch] = useState("");
@@ -107,11 +108,22 @@ export default function EditProfilePage() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   // 🔥 EDIT SUBMIT (PATCH)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const errs = {};
+    if (!form.name?.trim()) errs.name = "Full name is required.";
+    if (!form.college?.trim()) errs.college = "College name is required.";
+    if (!branch) errs.department = "Please select your branch.";
+    if (!form.batchYear?.toString().trim()) errs.batchYear = "Batch year is required.";
+    else if (!/^\d{4}$/.test(form.batchYear)) errs.batchYear = "Enter a valid 4-digit year.";
+    if (!form.company?.trim()) errs.company = "Company is required.";
+    if (form.hourlyRate !== "" && form.hourlyRate !== undefined && Number(form.hourlyRate) < 0) errs.hourlyRate = "Hourly rate cannot be negative.";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
 
     const formData = new FormData();
 
@@ -165,6 +177,7 @@ export default function EditProfilePage() {
                 value={form.name || ""}
                 onChange={handleChange}
               />
+              {errors.name && <p className={styles.fieldError}>{errors.name}</p>}
             </div>
 
             <div>
@@ -185,6 +198,7 @@ export default function EditProfilePage() {
                 value={form.college || ""}
                 onChange={handleChange}
               />
+              {errors.college && <p className={styles.fieldError}>{errors.college}</p>}
             </div>
 
             {/* Branch */}
@@ -208,6 +222,7 @@ export default function EditProfilePage() {
                           setBranch(b);
                           setForm({ ...form, department: b });
                           setBranchOpen(false);
+                          setErrors((prev) => ({ ...prev, department: "" }));
                         }}
                       >
                         {b}
@@ -216,6 +231,7 @@ export default function EditProfilePage() {
                   </div>
                 )}
               </div>
+              {errors.department && <p className={styles.fieldError}>{errors.department}</p>}
             </div>
 
             <div>
@@ -226,6 +242,7 @@ export default function EditProfilePage() {
                 value={form.batchYear || ""}
                 onChange={handleChange}
               />
+              {errors.batchYear && <p className={styles.fieldError}>{errors.batchYear}</p>}
             </div>
 
             <div>
@@ -237,6 +254,7 @@ export default function EditProfilePage() {
                 onChange={handleChange}
                 required
               />
+              {errors.company && <p className={styles.fieldError}>{errors.company}</p>}
             </div>
 
             <div>
@@ -321,6 +339,7 @@ export default function EditProfilePage() {
                 value={form.hourlyRate || ""}
                 onChange={handleChange}
               />
+              {errors.hourlyRate && <p className={styles.fieldError}>{errors.hourlyRate}</p>}
             </div>
 
             <div>

@@ -122,6 +122,7 @@ exports.createSession = async (req, res) => {
       deadline,
       duration,
       price,
+      isPaid: price > 0,
       coverImage,
       maxSeats,
       category,
@@ -140,21 +141,33 @@ exports.createSession = async (req, res) => {
 
     // Notify the alumni that their group chat is ready (upsert to prevent duplicates)
     await Notification.findOneAndUpdate(
-      { userId, type: "session_booking", "meta.sessionId": session._id, "meta.groupId": group._id },
+      {
+        userId,
+        type: "session_booking",
+        "meta.sessionId": session._id,
+        "meta.groupId": group._id,
+      },
       {
         $setOnInsert: {
           userId,
           type: "session_booking",
           message: `A group chat has been created for your session "${title}". Participants will be added as they register.`,
-          meta: { sessionId: session._id, sessionTitle: title, groupId: group._id },
+          meta: {
+            sessionId: session._id,
+            sessionTitle: title,
+            groupId: group._id,
+          },
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     // Notify all students from the same college about the new session
     const alumniUser2 = await User.findById(userId).select("college");
-    const collegeStudents = await User.find({ role: "student", college: alumniUser2?.college }).select("_id");
+    const collegeStudents = await User.find({
+      role: "student",
+      college: alumniUser2?.college,
+    }).select("_id");
     const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
 
@@ -168,7 +181,7 @@ exports.createSession = async (req, res) => {
         });
         const socketId = onlineUsers.get(student._id.toString());
         if (socketId && io) io.to(socketId).emit("notification:new", notif);
-      })
+      }),
     );
 
     res.status(201).json({
@@ -192,15 +205,23 @@ exports.getMySessions = async (req, res) => {
     const alumni = await Alumni.findOne({ userId }).populate("userId");
 
     if (!alumni) {
-      return res.status(404).json({ success: false, message: "Alumni profile not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni profile not found" });
     }
 
-    const sessions = await Session.find({ alumniId: alumni._id }).sort({ startTime: -1 });
+    const sessions = await Session.find({ alumniId: alumni._id }).sort({
+      startTime: -1,
+    });
 
     res.status(200).json({ success: true, alumni, sessions });
   } catch (error) {
     console.error("getMySessions error:", error);
-    res.status(500).json({ success: false, message: "Error fetching sessions", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching sessions",
+      error: error.message,
+    });
   }
 };
 
@@ -209,12 +230,16 @@ exports.getSessionById = async (req, res) => {
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
     if (!alumni) {
-      return res.status(404).json({ success: false, message: "Alumni not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
     }
 
     const session = await Session.findById(id);
     if (!session) {
-      return res.status(404).json({ success: false, message: "Session not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
     }
 
     if (session.alumniId.toString() !== alumni._id.toString()) {
@@ -223,7 +248,11 @@ exports.getSessionById = async (req, res) => {
 
     res.status(200).json({ success: true, session });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching session", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching session",
+      error: error.message,
+    });
   }
 };
 
@@ -232,23 +261,53 @@ exports.updateSession = async (req, res) => {
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
     if (!alumni) {
-      return res.status(404).json({ success: false, message: "Alumni not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
     }
 
     const session = await Session.findById(id);
     if (!session) {
-      return res.status(404).json({ success: false, message: "Session not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
     }
 
     if (session.alumniId.toString() !== alumni._id.toString()) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const { title, description, startTime, deadline, duration, price, maxSeats, category, status } = req.body;
-    const updateData = { title, description, startTime, deadline, duration, price, maxSeats, category, status };
+    const {
+      title,
+      description,
+      startTime,
+      deadline,
+      duration,
+      price,
+      maxSeats,
+      category,
+      status,
+    } = req.body;
+    const updateData = {
+      title,
+      description,
+      startTime,
+      deadline,
+      duration,
+      price,
+      maxSeats,
+      category,
+      status,
+    };
 
     // Remove undefined fields
-    Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
+
+    if (updateData.price !== undefined) {
+      updateData.isPaid = updateData.price > 0;
+    }
 
     if (req.file) {
       // Delete old image from Cloudinary if exists
@@ -261,11 +320,21 @@ exports.updateSession = async (req, res) => {
       };
     }
 
-    const updatedSession = await Session.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedSession = await Session.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
-    res.status(200).json({ success: true, message: "Session updated successfully", session: updatedSession });
+    res.status(200).json({
+      success: true,
+      message: "Session updated successfully",
+      session: updatedSession,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error updating session", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error updating session",
+      error: error.message,
+    });
   }
 };
 
@@ -274,12 +343,16 @@ exports.deleteSession = async (req, res) => {
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
     if (!alumni) {
-      return res.status(404).json({ success: false, message: "Alumni not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
     }
 
     const session = await Session.findById(id);
     if (!session) {
-      return res.status(404).json({ success: false, message: "Session not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
     }
 
     if (session.alumniId.toString() !== alumni._id.toString()) {
@@ -293,7 +366,9 @@ exports.deleteSession = async (req, res) => {
     // Get all registered students before deleting
     const GroupChat = require("../models/GroupChat");
     const Message = require("../models/Message");
-    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const registrations = await Registration.find({ sessionId: id }).select(
+      "studentId",
+    );
     const studentIds = registrations.map((r) => r.studentId);
 
     // Notify each registered student
@@ -303,7 +378,7 @@ exports.deleteSession = async (req, res) => {
         type: "session_cancelled",
         message: `The session "${session.title}" has been cancelled by the host. We're sorry for the inconvenience.`,
         meta: { sessionId: session._id, sessionTitle: session.title },
-      })
+      }),
     );
     const studentNotifs = await Promise.all(notifPromises);
 
@@ -328,7 +403,9 @@ exports.deleteSession = async (req, res) => {
       if (io) {
         const populatedMsg = await cancelMsg.populate("senderId", "name role");
         io.to(`group:${group._id}`).emit("group:receive", populatedMsg);
-        io.to(`group:${group._id}`).emit("group:deactivated", { groupId: group._id });
+        io.to(`group:${group._id}`).emit("group:deactivated", {
+          groupId: group._id,
+        });
       }
     }
 
@@ -342,10 +419,16 @@ exports.deleteSession = async (req, res) => {
 
     await Session.findByIdAndDelete(id);
 
-    res.status(200).json({ success: true, message: "Session deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Session deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Error deleting session", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Error deleting session",
+      error: error.message,
+    });
   }
 };
 
@@ -358,7 +441,9 @@ exports.getAlumniById = async (req, res) => {
       .populate("achievements");
 
     if (!alumni) {
-      return res.status(404).json({ success: false, message: "Alumni not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
     }
 
     const sessions = await Session.find({
@@ -397,13 +482,18 @@ exports.searchAlumni = async (req, res) => {
     // Handle direct AlumniProfile field filters
     if (company) alumniQuery.company = { $regex: company, $options: "i" };
     if (jobTitle) alumniQuery.jobTitle = { $regex: jobTitle, $options: "i" };
-    if (skills) alumniQuery.skills = { $elemMatch: { $regex: skills, $options: "i" } };
+    if (skills)
+      alumniQuery.skills = { $elemMatch: { $regex: skills, $options: "i" } };
 
     // Default: no filters provided — apply college filter from authenticated user
     if (!hasFilters && req.user) {
-      const studentUser = await User.findById(req.user.userId).select("college");
+      const studentUser = await User.findById(req.user.userId).select(
+        "college",
+      );
       if (studentUser && studentUser.college) {
-        const sameCollegeUsers = await User.find({ college: studentUser.college }).select("_id");
+        const sameCollegeUsers = await User.find({
+          college: studentUser.college,
+        }).select("_id");
         const sameCollegeUserIds = sameCollegeUsers.map((u) => u._id);
         alumniQuery.userId = { $in: sameCollegeUserIds };
       }
@@ -430,10 +520,16 @@ exports.getSessionParticipants = async (req, res) => {
   try {
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
-    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+    if (!alumni)
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
 
     const session = await Session.findById(id);
-    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    if (!session)
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
 
     if (session.alumniId.toString() !== alumni._id.toString()) {
       return res.status(403).json({ success: false, message: "Forbidden" });
@@ -446,7 +542,9 @@ exports.getSessionParticipants = async (req, res) => {
     // Enrich with student profile (department, batchYear, profileImage)
     const participants = await Promise.all(
       registrations.map(async (reg) => {
-        const profile = await StudentProfile.findOne({ userId: reg.studentId._id });
+        const profile = await StudentProfile.findOne({
+          userId: reg.studentId._id,
+        });
         return {
           _id: reg._id,
           registeredAt: reg.createdAt,
@@ -461,7 +559,7 @@ exports.getSessionParticipants = async (req, res) => {
             profileImage: profile?.profileImage || null,
           },
         };
-      })
+      }),
     );
 
     res.json({ success: true, participants, total: participants.length });
@@ -475,10 +573,17 @@ exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user.userId;
     // Alumni should never see group_invite notifications — those are student-only
-    const notifications = await Notification.find({ userId, type: { $ne: "group_invite" } })
+    const notifications = await Notification.find({
+      userId,
+      type: { $ne: "group_invite" },
+    })
       .sort({ createdAt: -1 })
       .limit(50);
-    const unreadCount = await Notification.countDocuments({ userId, isRead: false, type: { $ne: "group_invite" } });
+    const unreadCount = await Notification.countDocuments({
+      userId,
+      isRead: false,
+      type: { $ne: "group_invite" },
+    });
     res.json({ success: true, notifications, unreadCount });
   } catch (err) {
     console.error(err);
@@ -502,31 +607,49 @@ exports.startSession = async (req, res) => {
     const { id } = req.params;
     const { meetLink } = req.body;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
-    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+    if (!alumni)
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
 
     const session = await Session.findById(id);
-    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    if (!session)
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
     if (session.alumniId.toString() !== alumni._id.toString())
       return res.status(403).json({ success: false, message: "Forbidden" });
     if (session.status !== "scheduled")
-      return res.status(400).json({ success: false, message: `Session is already ${session.status}` });
+      return res.status(400).json({
+        success: false,
+        message: `Session is already ${session.status}`,
+      });
     if (!meetLink || !meetLink.trim())
-      return res.status(400).json({ success: false, message: "Meet link is required to start the session" });
+      return res.status(400).json({
+        success: false,
+        message: "Meet link is required to start the session",
+      });
 
     // Allow starting within ±60 minutes of scheduled start time
     const now = new Date();
     const diff = Math.abs(now - new Date(session.startTime)) / 60000;
     if (diff > 60)
-      return res.status(400).json({ success: false, message: "You can only start the session within 60 minutes of the scheduled start time" });
+      return res.status(400).json({
+        success: false,
+        message:
+          "You can only start the session within 60 minutes of the scheduled start time",
+      });
 
     const updated = await Session.findByIdAndUpdate(
       id,
       { status: "live", meetLink: meetLink.trim(), actualStartTime: now },
-      { new: true }
+      { new: true },
     );
 
     // Notify all registered students that the session is live
-    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const registrations = await Registration.find({ sessionId: id }).select(
+      "studentId",
+    );
     const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
     await Promise.all(
@@ -539,7 +662,7 @@ exports.startSession = async (req, res) => {
         });
         const socketId = onlineUsers.get(reg.studentId.toString());
         if (socketId && io) io.to(socketId).emit("notification:new", notif);
-      })
+      }),
     );
 
     res.json({ success: true, message: "Session started", session: updated });
@@ -553,14 +676,22 @@ exports.endSession = async (req, res) => {
   try {
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
-    if (!alumni) return res.status(404).json({ success: false, message: "Alumni not found" });
+    if (!alumni)
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
 
     const session = await Session.findById(id);
-    if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+    if (!session)
+      return res
+        .status(404)
+        .json({ success: false, message: "Session not found" });
     if (session.alumniId.toString() !== alumni._id.toString())
       return res.status(403).json({ success: false, message: "Forbidden" });
     if (session.status !== "live")
-      return res.status(400).json({ success: false, message: "Session is not currently live" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Session is not currently live" });
 
     // Must have run for at least 50% of scheduled duration
     const now = new Date();
@@ -575,11 +706,13 @@ exports.endSession = async (req, res) => {
     const updated = await Session.findByIdAndUpdate(
       id,
       { status: "completed", meetLink: null, actualEndTime: now },
-      { new: true }
+      { new: true },
     );
 
     // Notify registered students that session is complete
-    const registrations = await Registration.find({ sessionId: id }).select("studentId");
+    const registrations = await Registration.find({ sessionId: id }).select(
+      "studentId",
+    );
     const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
     await Promise.all(
@@ -592,7 +725,7 @@ exports.endSession = async (req, res) => {
         });
         const socketId = onlineUsers.get(reg.studentId.toString());
         if (socketId && io) io.to(socketId).emit("notification:new", notif);
-      })
+      }),
     );
 
     res.json({ success: true, message: "Session ended", session: updated });

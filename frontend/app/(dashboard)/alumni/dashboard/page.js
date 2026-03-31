@@ -23,11 +23,14 @@ export default function DashboardPage() {
     try {
       const token = localStorage.getItem("token");
       console.log(token);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/my-sessions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/my-sessions`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await res.json();
       console.log(data);
@@ -62,7 +65,8 @@ export default function DashboardPage() {
     (sum, s) => sum + (s.price || 0) * (s.currentSeats || 0),
     0,
   );
-  if (loadError) return <div style={{ padding: "2rem", color: "red" }}>{loadError}</div>;
+  if (loadError)
+    return <div style={{ padding: "2rem", color: "red" }}>{loadError}</div>;
   if (!alumni) return <Loader />;
 
   return (
@@ -102,7 +106,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Button */}
-      <button className="create-btn">+ Create New Course</button>
+      <button
+        onClick={() => router.push("/alumni/create-session")}
+        className="create-btn"
+      >
+        + Create New Course
+      </button>
 
       {/* Tabs */}
       <div className="tabs">
@@ -134,25 +143,33 @@ export default function DashboardPage() {
               key={session._id}
               className="webinar-card"
               style={{ cursor: "pointer" }}
-              onClick={() => router.push(`/alumni/my-sessions?highlight=${session._id}`)}
+              onClick={() =>
+                router.push(`/alumni/my-sessions?highlight=${session._id}`)
+              }
             >
               <h3>{session.title}</h3>
 
               <div className="info">
                 <div>
                   <p>Date:</p>
-                  <span>{new Date(session.startTime).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(session.startTime).toLocaleDateString()}
+                  </span>
                 </div>
                 <div>
                   <p>Time:</p>
-                  <span>{new Date(session.startTime).toLocaleTimeString()}</span>
+                  <span>
+                    {new Date(session.startTime).toLocaleTimeString()}
+                  </span>
                 </div>
               </div>
 
               <div className="info">
                 <div>
                   <p>Enrollments:</p>
-                  <span className="orange-text">{session.currentSeats || 0} students</span>
+                  <span className="orange-text">
+                    {session.currentSeats || 0} students
+                  </span>
                 </div>
                 <div>
                   <p>Status:</p>

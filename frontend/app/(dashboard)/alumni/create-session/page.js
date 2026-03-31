@@ -23,9 +23,11 @@ export default function CreateSession() {
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   const handleImageChange = (e) => {
@@ -37,6 +39,31 @@ export default function CreateSession() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
+
+    const errs = {};
+    if (!form.title.trim()) errs.title = "Session title is required.";
+    if (!form.description.trim()) errs.description = "Description is required.";
+    if (!form.startTime) errs.startTime = "Start time is required.";
+    else if (new Date(form.startTime) <= new Date())
+      errs.startTime = "Start time must be in the future.";
+    if (!form.deadline) errs.deadline = "Registration deadline is required.";
+    else if (
+      form.startTime &&
+      new Date(form.deadline) >= new Date(form.startTime)
+    )
+      errs.deadline = "Deadline must be before start time.";
+    if (!form.duration || Number(form.duration) <= 0)
+      errs.duration = "Enter a valid duration.";
+    if (form.price !== "" && Number(form.price) < 0)
+      errs.price = "Price cannot be negative.";
+    if (!form.maxSeats || Number(form.maxSeats) <= 0)
+      errs.maxSeats = "Enter a valid number of seats.";
+    if (!form.category.trim()) errs.category = "Category is required.";
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+
     setSubmitting(true);
 
     const formData = new FormData();
@@ -91,13 +118,17 @@ export default function CreateSession() {
           {/* Title */}
           <div className="form-group">
             <label>Session Title</label>
-            <input type="text" name="title" onChange={handleChange} required />
+            <input type="text" name="title" onChange={handleChange} />
+            {errors.title && <p className="field-error">{errors.title}</p>}
           </div>
 
           {/* Description */}
           <div className="form-group">
             <label>Description</label>
             <textarea name="description" onChange={handleChange} />
+            {errors.description && (
+              <p className="field-error">{errors.description}</p>
+            )}
           </div>
 
           {/* Image Upload */}
@@ -134,8 +165,10 @@ export default function CreateSession() {
                 type="datetime-local"
                 name="startTime"
                 onChange={handleChange}
-                required
               />
+              {errors.startTime && (
+                <p className="field-error">{errors.startTime}</p>
+              )}
             </div>
 
             <div className="form-group">
@@ -144,18 +177,18 @@ export default function CreateSession() {
                 type="datetime-local"
                 name="deadline"
                 onChange={handleChange}
-                required
               />
+              {errors.deadline && (
+                <p className="field-error">{errors.deadline}</p>
+              )}
             </div>
 
             <div className="form-group">
               <label>Duration (minutes)</label>
-              <input
-                type="number"
-                name="duration"
-                onChange={handleChange}
-                required
-              />
+              <input type="number" name="duration" onChange={handleChange} />
+              {errors.duration && (
+                <p className="field-error">{errors.duration}</p>
+              )}
             </div>
           </div>
 
@@ -164,11 +197,15 @@ export default function CreateSession() {
             <div className="form-group">
               <label>Price (₹)</label>
               <input type="number" name="price" onChange={handleChange} />
+              {errors.price && <p className="field-error">{errors.price}</p>}
             </div>
 
             <div className="form-group">
               <label>Max Seats</label>
               <input type="number" name="maxSeats" onChange={handleChange} />
+              {errors.maxSeats && (
+                <p className="field-error">{errors.maxSeats}</p>
+              )}
             </div>
           </div>
 
@@ -181,6 +218,9 @@ export default function CreateSession() {
               placeholder="e.g. DSA, Web Dev"
               onChange={handleChange}
             />
+            {errors.category && (
+              <p className="field-error">{errors.category}</p>
+            )}
           </div>
 
           <button type="submit" className="submit-btn" disabled={submitting}>

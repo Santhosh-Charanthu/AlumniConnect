@@ -14,6 +14,7 @@
 }
 
 .form-container h2 {
+  text-align: center;
   margin-bottom: 20px;
   font-size: 22px;
 }
@@ -155,4 +156,10 @@
   .form-container {
     padding: 10px;
   }
+}
+
+.field-error {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
 }

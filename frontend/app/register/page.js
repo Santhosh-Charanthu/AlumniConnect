@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({});
   const [image, setImage] = useState(null);
+  const [errors, setErrors] = useState({});
 
   // OTP modal state
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -62,7 +63,10 @@ export default function RegisterPage() {
 
   const branches = ["CSE","AIML","IT","AIDS","ECE","CIVIL","EEE","MECH"];
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
 
   // ── OTP timer ──────────────────────────────────────────────────────────────
   const startResendTimer = () => {
@@ -148,6 +152,21 @@ export default function RegisterPage() {
   };
 
   // ── Final registration submit ──────────────────────────────────────────────
+  const validateForm = () => {
+    const errs = {};
+    if (!form.name?.trim()) errs.name = "Full name is required.";
+    if (!form.email?.trim()) errs.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    if (!branch) errs.department = "Please select your branch.";
+    if (!form.batchYear?.trim()) errs.batchYear = "Batch year is required.";
+    else if (!/^\d{4}$/.test(form.batchYear)) errs.batchYear = "Enter a valid 4-digit year.";
+    if (!form.password) errs.password = "Password is required.";
+    else if (form.password.length < 6) errs.password = "Password must be at least 6 characters.";
+    if (!image) errs.profileImage = "Profile image is required.";
+    if (role === "alumni" && !form.company?.trim()) errs.company = "Company is required.";
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -155,6 +174,9 @@ export default function RegisterPage() {
       showToast("error", "Please verify your email with OTP first");
       return;
     }
+
+    const errs = validateForm();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
 
     const formData = new FormData();
     Object.keys(form).forEach((key) => {
@@ -254,7 +276,8 @@ export default function RegisterPage() {
               {/* Full Name */}
               <div>
                 <label className={styles.label}>Full Name</label>
-                <input name="name" className={styles.input} onChange={handleChange} required />
+                <input name="name" className={styles.input} onChange={handleChange} />
+                {errors.name && <p className={styles.fieldError}>{errors.name}</p>}
               </div>
 
               {/* Email + OTP trigger */}
@@ -266,7 +289,6 @@ export default function RegisterPage() {
                     className={styles.input}
                     placeholder="yourname@college.edu"
                     onChange={handleChange}
-                    required
                     disabled={otpVerified}
                   />
                   {otpVerified ? (
@@ -282,12 +304,13 @@ export default function RegisterPage() {
                     </button>
                   )}
                 </div>
+                {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
               </div>
 
               {/* College */}
               <div>
                 <label className={styles.label}>College Name</label>
-                <input name="college" className={styles.input} placeholder="e.g. IIT Hyderabad" onChange={handleChange} required />
+                <input name="college" className={styles.input} placeholder="e.g. IIT Hyderabad" onChange={handleChange} />
               </div>
 
               {/* Branch */}
@@ -304,19 +327,21 @@ export default function RegisterPage() {
                   {branchOpen && (
                     <div className={styles.dropdownMenu}>
                       {branches.map((b) => (
-                        <div key={b} className={styles.dropdownItem} onClick={() => { setBranch(b); setForm({ ...form, department: b }); setBranchOpen(false); }}>
+                        <div key={b} className={styles.dropdownItem} onClick={() => { setBranch(b); setForm({ ...form, department: b }); setBranchOpen(false); setErrors((prev) => ({ ...prev, department: "" })); }}>
                           {b}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
+                {errors.department && <p className={styles.fieldError}>{errors.department}</p>}
               </div>
 
               {/* Batch Year */}
               <div>
                 <label className={styles.label}>Batch Year</label>
-                <input name="batchYear" className={styles.input} onChange={handleChange} required />
+                <input name="batchYear" className={styles.input} onChange={handleChange} />
+                {errors.batchYear && <p className={styles.fieldError}>{errors.batchYear}</p>}
               </div>
 
               {/* Student Interests */}
@@ -351,7 +376,8 @@ export default function RegisterPage() {
               {/* Password */}
               <div>
                 <label className={styles.label}>Password</label>
-                <input type="password" name="password" className={styles.input} onChange={handleChange} required />
+                <input type="password" name="password" className={styles.input} onChange={handleChange} />
+                {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
               </div>
 
               {/* Alumni-only fields */}
@@ -359,7 +385,8 @@ export default function RegisterPage() {
                 <>
                   <div>
                     <label className={styles.label}>Company</label>
-                    <input name="company" className={styles.input} onChange={handleChange} required />
+                    <input name="company" className={styles.input} onChange={handleChange} />
+                    {errors.company && <p className={styles.fieldError}>{errors.company}</p>}
                   </div>
                   <div>
                     <label className={styles.label}>Job Title</label>
@@ -408,11 +435,12 @@ export default function RegisterPage() {
               {/* Profile Image */}
               <div className={styles.fileWrapper}>
                 <label className={styles.label}>Profile Image</label>
-                <input type="file" id="profileImage" className={styles.fileInput} accept="image/*" onChange={(e) => setImage(e.target.files[0])} required />
+                <input type="file" id="profileImage" className={styles.fileInput} accept="image/*" onChange={(e) => { setImage(e.target.files[0]); setErrors((prev) => ({ ...prev, profileImage: "" })); }} />
                 <label htmlFor="profileImage" className={`${styles.fileLabel} ${image ? styles.fileSelected : ""}`}>
                   {image ? image.name : "Click to upload profile image"}
                 </label>
                 <span className={styles.fileHint}>JPG / JPEG / PNG • Max size 2MB</span>
+                {errors.profileImage && <p className={styles.fieldError}>{errors.profileImage}</p>}
               </div>
             </div>
 

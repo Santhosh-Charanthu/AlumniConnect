@@ -16,8 +16,19 @@ const registrationSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "refunded"],
+      enum: [
+        "pending",
+        "free",
+        "paid",
+        "refund_pending",
+        "refunded",
+        "cancelled",
+      ],
       default: "pending",
+    },
+
+    razorpayPaymentId: {
+      type: String,
     },
 
     attended: {
@@ -25,7 +36,7 @@ const registrationSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Registration", registrationSchema);

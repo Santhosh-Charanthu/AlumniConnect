@@ -87,6 +87,10 @@ export default function StudentProfilePage() {
       setFormError("Name is required.");
       return;
     }
+    if (form.batchYear && !/^\d{4}$/.test(form.batchYear)) {
+      setFormError("Enter a valid 4-digit batch year.");
+      return;
+    }
     setFormError("");
 
     try {

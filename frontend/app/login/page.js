@@ -14,13 +14,25 @@ export default function LoginPage() {
 
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!form.email.trim()) errs.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    if (!form.password) errs.password = "Password is required.";
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
 
     try {
       const res = await loginUser({ ...form, role });
@@ -85,8 +97,8 @@ export default function LoginPage() {
                 className={styles.input}
                 placeholder="yourname@college.edu"
                 onChange={handleChange}
-                required
               />
+              {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
             </div>
 
             <div className={styles.fullWidth}>
@@ -97,8 +109,8 @@ export default function LoginPage() {
                 className={styles.input}
                 placeholder="Enter your password"
                 onChange={handleChange}
-                required
               />
+              {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
             </div>
           </div>
 
