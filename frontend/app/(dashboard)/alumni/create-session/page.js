@@ -16,7 +16,6 @@ export default function CreateSession() {
     deadline: "",
     duration: "",
     price: "",
-    maxSeats: "",
     category: "",
   });
 
@@ -56,8 +55,6 @@ export default function CreateSession() {
       errs.duration = "Enter a valid duration.";
     if (form.price !== "" && Number(form.price) < 0)
       errs.price = "Price cannot be negative.";
-    if (!form.maxSeats || Number(form.maxSeats) <= 0)
-      errs.maxSeats = "Enter a valid number of seats.";
     if (!form.category.trim()) errs.category = "Category is required.";
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -192,20 +189,12 @@ export default function CreateSession() {
             </div>
           </div>
 
-          {/* Price & Seats */}
+          {/* Price */}
           <div className="form-row">
             <div className="form-group">
               <label>Price (₹)</label>
               <input type="number" name="price" onChange={handleChange} />
               {errors.price && <p className="field-error">{errors.price}</p>}
-            </div>
-
-            <div className="form-group">
-              <label>Max Seats</label>
-              <input type="number" name="maxSeats" onChange={handleChange} />
-              {errors.maxSeats && (
-                <p className="field-error">{errors.maxSeats}</p>
-              )}
             </div>
           </div>
 

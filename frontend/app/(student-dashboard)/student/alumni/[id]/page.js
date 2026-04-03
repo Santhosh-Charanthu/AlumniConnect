@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Star, Calendar, Clock, Users, MessageSquare } from "lucide-react";
+import {
+  ArrowLeft,
+  Star,
+  Calendar,
+  Clock,
+  Users,
+  MessageSquare,
+} from "lucide-react";
 import "../../../../(dashboard)/alumni/profile/profile.css";
 import "./alumni-profile.css";
 import Loader from "../../../../components/Loader";
@@ -23,7 +30,10 @@ export default function StudentAlumniProfilePage() {
 
   useEffect(() => {
     const handler = (e) => {
-      if (tabDropdownRef.current && !tabDropdownRef.current.contains(e.target)) {
+      if (
+        tabDropdownRef.current &&
+        !tabDropdownRef.current.contains(e.target)
+      ) {
         setShowTabDropdown(false);
       }
     };
@@ -34,7 +44,9 @@ export default function StudentAlumniProfilePage() {
   useEffect(() => {
     const fetchAlumni = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/${id}`,
+        );
         const data = await res.json();
         if (res.ok && data.success) {
           setAlumni(data.alumni);
@@ -54,13 +66,28 @@ export default function StudentAlumniProfilePage() {
   }, [id]);
 
   if (loading) return <Loader text="Loading profile..." />;
-  if (notFound || !alumni) return <div className="profile-not-found"><p>Alumni not found</p></div>;
+  if (notFound || !alumni)
+    return (
+      <div className="profile-not-found">
+        <p>Alumni not found</p>
+      </div>
+    );
 
   const avgRating = reviews.length
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(
+        1,
+      )
     : alumni.rating?.toFixed(1) || "0.0";
 
-  const tabs = ["about", "experience", "projects", "achievements", "skills", "sessions", "reviews"];
+  const tabs = [
+    "about",
+    "experience",
+    "projects",
+    "achievements",
+    "skills",
+    "sessions",
+    "reviews",
+  ];
 
   return (
     <div className="profile-wrapper">
@@ -84,7 +111,9 @@ export default function StudentAlumniProfilePage() {
                   style={{ borderRadius: "50%", objectFit: "cover" }}
                 />
               ) : (
-                <div className="avatar">{user?.name?.charAt(0)?.toUpperCase()}</div>
+                <div className="avatar">
+                  {user?.name?.charAt(0)?.toUpperCase()}
+                </div>
               )}
             </div>
           </div>
@@ -97,7 +126,11 @@ export default function StudentAlumniProfilePage() {
             <p className="bio">{alumni.bio}</p>
             <button
               className="alumni-profile-msg-btn"
-              onClick={() => router.push(`/student/messages?dm=${alumni.userId?._id || alumni.userId}&name=${encodeURIComponent(user?.name || "")}`)}
+              onClick={() =>
+                router.push(
+                  `/student/messages?dm=${alumni.userId?._id || alumni.userId}&name=${encodeURIComponent(user?.name || "")}`,
+                )
+              }
             >
               <MessageSquare size={15} /> Message
             </button>
@@ -123,7 +156,22 @@ export default function StudentAlumniProfilePage() {
               onClick={() => setShowTabDropdown((p) => !p)}
             >
               <span>{activeTab}</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showTabDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{
+                  transform: showTabDropdown
+                    ? "rotate(180deg)"
+                    : "rotate(0deg)",
+                  transition: "transform 0.2s",
+                }}
+              >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
@@ -133,7 +181,10 @@ export default function StudentAlumniProfilePage() {
                   <button
                     key={tab}
                     className={`tab-dropdown-item ${activeTab === tab ? "active" : ""}`}
-                    onClick={() => { setActiveTab(tab); setShowTabDropdown(false); }}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setShowTabDropdown(false);
+                    }}
                   >
                     {tab}
                   </button>
@@ -145,7 +196,6 @@ export default function StudentAlumniProfilePage() {
 
         {/* TAB CONTENT */}
         <section className="profile-content">
-
           {/* ABOUT */}
           {activeTab === "about" && (
             <div className="content-card">
@@ -178,7 +228,9 @@ export default function StudentAlumniProfilePage() {
                       <h3>{exp.role}</h3>
                       <span>
                         {new Date(exp.startDate).getFullYear()} –{" "}
-                        {exp.endDate ? new Date(exp.endDate).getFullYear() : "Present"}
+                        {exp.endDate
+                          ? new Date(exp.endDate).getFullYear()
+                          : "Present"}
                       </span>
                     </div>
                     <h4>{exp.company}</h4>
@@ -203,16 +255,28 @@ export default function StudentAlumniProfilePage() {
                     <h3>{proj.title}</h3>
                     <p>{proj.description}</p>
                     <div className="skill-row">
-                      {proj.techStack?.map((tech) => <span key={tech}>{tech}</span>)}
+                      {proj.techStack?.map((tech) => (
+                        <span key={tech}>{tech}</span>
+                      ))}
                     </div>
                     <div className="project-actions">
                       {proj.liveLink && (
-                        <a href={proj.liveLink} target="_blank" rel="noopener noreferrer" className="action-btn demo">
+                        <a
+                          href={proj.liveLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="action-btn demo"
+                        >
                           🌐 Live Demo
                         </a>
                       )}
                       {proj.repoLink && (
-                        <a href={proj.repoLink} target="_blank" rel="noopener noreferrer" className="action-btn github">
+                        <a
+                          href={proj.repoLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="action-btn github"
+                        >
                           GitHub
                         </a>
                       )}
@@ -240,7 +304,12 @@ export default function StudentAlumniProfilePage() {
                     </div>
                     <p>{ach.description}</p>
                     {ach.certificateUrl && (
-                      <a href={ach.certificateUrl} target="_blank" rel="noopener noreferrer" className="certificate-link">
+                      <a
+                        href={ach.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="certificate-link"
+                      >
                         View Certificate
                       </a>
                     )}
@@ -256,7 +325,12 @@ export default function StudentAlumniProfilePage() {
               {alumni.skills && alumni.skills.length > 0 ? (
                 <div className="skills-grid">
                   {alumni.skills.map((skill, index) => (
-                    <span key={skill} className={`skill-chip color-${index % 6}`}>{skill}</span>
+                    <span
+                      key={skill}
+                      className={`skill-chip color-${index % 6}`}
+                    >
+                      {skill}
+                    </span>
                   ))}
                 </div>
               ) : (
@@ -282,16 +356,27 @@ export default function StudentAlumniProfilePage() {
                       <div className="pub-session-info">
                         <h4>{session.title}</h4>
                         <div className="pub-session-meta">
-                          <span><Calendar size={13} /> {new Date(session.startTime).toLocaleDateString()}</span>
-                          <span><Clock size={13} /> {new Date(session.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-                          <span><Users size={13} /> {(session.maxSeats || 0) - (session.currentSeats || 0)} seats left</span>
+                          <span>
+                            <Calendar size={13} />{" "}
+                            {new Date(session.startTime).toLocaleDateString()}
+                          </span>
+                          <span>
+                            <Clock size={13} />{" "}
+                            {new Date(session.startTime).toLocaleTimeString(
+                              [],
+                              { hour: "2-digit", minute: "2-digit" },
+                            )}
+                          </span>
                         </div>
                       </div>
                       <div className="pub-session-right">
                         <span className="pub-session-price">
                           {session.price === 0 ? "Free" : `₹${session.price}`}
                         </span>
-                        <button className="btn primary" style={{ fontSize: "13px", padding: "8px 16px" }}>
+                        <button
+                          className="btn primary"
+                          style={{ fontSize: "13px", padding: "8px 16px" }}
+                        >
                           Book Session
                         </button>
                       </div>
@@ -310,7 +395,9 @@ export default function StudentAlumniProfilePage() {
                 <div className="pub-avg-rating">
                   <Star size={18} fill="#f59e0b" color="#f59e0b" />
                   <span>{avgRating}</span>
-                  <span className="pub-review-count">({reviews.length} review{reviews.length !== 1 ? "s" : ""})</span>
+                  <span className="pub-review-count">
+                    ({reviews.length} review{reviews.length !== 1 ? "s" : ""})
+                  </span>
                 </div>
               </div>
               {reviews.length === 0 ? (
@@ -322,7 +409,9 @@ export default function StudentAlumniProfilePage() {
                   {reviews.map((review) => (
                     <div key={review._id} className="pub-review-card">
                       <div className="pub-review-top">
-                        <span className="pub-reviewer-name">{review.studentId?.name || "Student"}</span>
+                        <span className="pub-reviewer-name">
+                          {review.studentId?.name || "Student"}
+                        </span>
                         <div className="pub-review-stars">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star
@@ -334,7 +423,9 @@ export default function StudentAlumniProfilePage() {
                           ))}
                         </div>
                       </div>
-                      {review.comment && <p className="pub-review-comment">{review.comment}</p>}
+                      {review.comment && (
+                        <p className="pub-review-comment">{review.comment}</p>
+                      )}
                       <span className="pub-review-date">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </span>
@@ -344,7 +435,6 @@ export default function StudentAlumniProfilePage() {
               )}
             </div>
           )}
-
         </section>
       </div>
     </div>

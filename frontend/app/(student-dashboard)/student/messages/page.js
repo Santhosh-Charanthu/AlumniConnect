@@ -624,12 +624,24 @@ function MessagesPageInner({ dmParam, dmName }) {
       if (existing) {
         selectDM(existing);
       } else {
+        // No existing conversation — add a placeholder entry so it shows in the list
+        const placeholderEntry = {
+          _id: dmParam,
+          user: { _id: dmParam, name: dmName || "Alumni", role: "alumni" },
+          lastMessage: null,
+        };
+        setConversations((prev) => {
+          const alreadyIn = prev.find((c) => String(c._id) === String(dmParam));
+          if (alreadyIn) return prev;
+          return [placeholderEntry, ...prev];
+        });
         setSelected({
           type: "direct",
           id: dmParam,
           name: dmName || "Alumni",
           meta: "Alumni",
         });
+        setActiveConversation({ type: "direct", id: dmParam });
         selectedRef.current = { type: "direct", id: dmParam };
       }
     }
@@ -699,11 +711,35 @@ function MessagesPageInner({ dmParam, dmName }) {
       const senderId = String(msg.senderId?._id || msg.senderId);
       const receiverId = String(msg.receiverId?._id || msg.receiverId);
       const partnerId = senderId === String(myIdNow) ? receiverId : senderId;
-      setConversations((prev) =>
-        prev.map((c) =>
-          String(c._id) === partnerId ? { ...c, lastMessage: msg } : c,
-        ),
-      );
+
+      setConversations((prev) => {
+        const exists = prev.find((c) => String(c._id) === partnerId);
+        if (exists) {
+          // Update existing conversation's last message
+          return prev.map((c) =>
+            String(c._id) === partnerId ? { ...c, lastMessage: msg } : c,
+          );
+        }
+        // New conversation — build a minimal entry from the message
+        const partnerUser =
+          senderId === String(myIdNow)
+            ? {
+                _id: receiverId,
+                name:
+                  msg.receiverId?.name || selectedRef.current?.name || "User",
+                role: msg.receiverId?.role || "alumni",
+              }
+            : {
+                _id: senderId,
+                name: msg.senderId?.name || "User",
+                role: msg.senderId?.role || "alumni",
+              };
+        return [
+          { _id: partnerId, user: partnerUser, lastMessage: msg },
+          ...prev,
+        ];
+      });
+
       const isOpen =
         selectedRef.current?.type === "direct" &&
         String(selectedRef.current?.id) === partnerId;

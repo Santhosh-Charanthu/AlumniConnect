@@ -63,4 +63,4 @@ const sendContactEmail = async ({ name, email, subject, message }) => {
   });
 };
 
-module.exports = { sendOtpEmail, sendContactEmail };
+module.exports = { transporter, sendOtpEmail, sendContactEmail };

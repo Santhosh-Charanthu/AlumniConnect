@@ -20,10 +20,12 @@ const {
   getSessionReviews,
   updateReview,
   deleteReview,
+  getMyBookings,
 } = require("../controllers/student.controller");
 
 router.get("/profile", auth, getMyProfile);
 router.patch("/profile", upload.single("profileImage"), auth, updateProfile);
+router.get("/my-bookings", auth, getMyBookings);
 router.get("/my-sessions", auth, getMySessions);
 router.get("/dashboard", auth, getDashboard);
 router.get("/upcoming-sessions", auth, getUpcomingSessions);

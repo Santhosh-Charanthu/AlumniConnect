@@ -4,10 +4,12 @@ const Payment = require("../models/Payment");
 const Session = require("../models/Session");
 const Registration = require("../models/Registration");
 const registerStudent = require("../utils/registerStudent");
+const Transaction = require("../models/Transaction");
 
 exports.createOrder = async (req, res) => {
   try {
-    const { studentId, sessionId } = req.body;
+    const userId = req.user.userId;
+    const { sessionId } = req.body;
 
     const session = await Session.findById(sessionId);
 
@@ -17,11 +19,25 @@ exports.createOrder = async (req, res) => {
         .json({ success: false, message: "Session not found" });
     }
 
-    // ❗ Check if already booked
+    if (session.status !== "scheduled") {
+      return res.status(400).json({
+        success: false,
+        message: "Session not available for booking",
+      });
+    }
+
+    if (session.deadline && new Date() > session.deadline) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration deadline passed",
+      });
+    }
+
+    // Check if already booked
     const existing = await Registration.findOne({
       sessionId,
-      studentId,
-      paymentStatus: "paid",
+      studentId: userId,
+      isActive: true,
     });
 
     if (existing) {
@@ -31,12 +47,18 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // ✅ Create pending registration (important)
-    // await Registration.findOneAndUpdate(
-    //   { sessionId, studentId },
-    //   { paymentStatus: "pending" },
-    //   { upsert: true, new: true }
-    // );
+    const existingTx = await Transaction.findOne({
+      userId,
+      sessionId,
+      status: "paid",
+    });
+
+    if (existingTx) {
+      return res.json({
+        success: false,
+        message: "Payment already completed",
+      });
+    }
 
     const order = await razorpay.orders.create({
       amount: session.price * 100,
@@ -58,14 +80,12 @@ exports.createOrder = async (req, res) => {
 };
 
 exports.verifyPayment = async (req, res) => {
-  console.log("🔥 HIT verify-payment API");
+  const userId = req.user.userId;
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      amount,
-      studentId,
       sessionId,
     } = req.body;
 
@@ -77,42 +97,58 @@ exports.verifyPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false });
+      console.log("❌ Signature mismatch");
+      return res
+        .status(400)
+        .json({ success: false, message: "Signature mismatch" });
     }
 
     const session = await Session.findById(sessionId);
+    console.log("session:", session?._id, "isPaid:", session?.isPaid);
 
-    if (!session || !session.isPaid) {
-      return res.status(400).json({ success: false });
+    if (!session) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session not found" });
+    }
+    if (!session.isPaid) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session is not a paid session" });
     }
 
-    // ❗ Check if already paid (not refunded)
-    const existing = await Registration.findOne({
-      sessionId,
-      studentId,
-      paymentStatus: "paid",
+    let transaction = await Transaction.findOne({
+      razorpayPaymentId: razorpay_payment_id,
     });
 
-    if (existing) {
+    if (transaction) {
       return res.json({ success: true, alreadyBooked: true });
     }
 
-    // ✅ Save Payment
-    const payment = await Payment.create({
-      amount,
+    // Create new transaction after verification
+    transaction = await Transaction.create({
+      userId,
+      sessionId,
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
-      status: "success",
+      amount: session.price,
+      status: "paid",
     });
 
-    console.log(razorpay_payment_id);
+    // Register the student
+    try {
+      await registerStudent({
+        userId,
+        sessionId,
+        req,
+      });
+    } catch (err) {
+      // rollback transaction
+      transaction.status = "pending";
+      await transaction.save();
 
-    await registerStudent({
-      userId: studentId,
-      sessionId,
-      req,
-      razorpayPaymentId: razorpay_payment_id,
-    });
+      throw err;
+    }
 
     res.json({ success: true });
   } catch (err) {
@@ -158,9 +194,9 @@ exports.handleWebhook = async (req, res) => {
 
     if (eventType === "refund.processed") {
       const refund = event.payload.refund.entity;
-      await Registration.findOneAndUpdate(
+      await Transaction.findOneAndUpdate(
         { razorpayPaymentId: refund.payment_id },
-        { paymentStatus: "refunded" },
+        { status: "refunded" },
       );
       console.log("💸 Refund completed via webhook:", refund.payment_id);
     }

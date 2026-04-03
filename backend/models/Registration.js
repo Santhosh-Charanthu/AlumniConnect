@@ -6,29 +6,19 @@ const registrationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Session",
       required: true,
+      index: true,
     },
 
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
 
-    paymentStatus: {
-      type: String,
-      enum: [
-        "pending",
-        "free",
-        "paid",
-        "refund_pending",
-        "refunded",
-        "cancelled",
-      ],
-      default: "pending",
-    },
-
-    razorpayPaymentId: {
-      type: String,
+    isActive: {
+      type: Boolean,
+      default: true, // 🔥 soft delete support
     },
 
     attended: {
@@ -38,5 +28,8 @@ const registrationSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// 🔥 Prevent duplicate registrations
+registrationSchema.index({ sessionId: 1, studentId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Registration", registrationSchema);

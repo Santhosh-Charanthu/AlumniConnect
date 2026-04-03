@@ -1,10 +1,30 @@
 const razorpay = require("../config/razorpay");
 const StudentProfile = require("../models/Student");
+const Transaction = require("../models/Transaction");
 const Registration = require("../models/Registration");
 const Session = require("../models/Session");
 const User = require("../models/User");
 const cloudinary = require("../config/cloudinary");
 const registerStudent = require("../utils/registerStudent");
+
+exports.getMyBookings = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const transactions = await Transaction.find({ userId })
+      .populate(
+        "sessionId",
+        "title startTime duration category coverImage status isPaid price",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({ success: true, bookings: transactions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 exports.getMyProfile = async (req, res) => {
   try {
@@ -85,33 +105,44 @@ exports.updateProfile = async (req, res) => {
 exports.getMySessions = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const Alumni = require("../models/Alumni");
 
     const registrations = await Registration.find({
       studentId: userId,
-    }).populate("sessionId");
+      isActive: true,
+    })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "sessionId",
+        populate: {
+          path: "alumniId",
+          populate: {
+            path: "userId",
+            select: "name",
+          },
+        },
+      })
+      .lean();
 
-    const populated = await Promise.all(
-      registrations.map(async (reg) => {
-        const regObj = reg.toObject();
-        if (regObj.sessionId && regObj.sessionId.alumniId) {
-          const alumniProfile = await Alumni.findById(
-            regObj.sessionId.alumniId,
-          ).populate("userId", "name");
-          regObj.sessionId.alumni = alumniProfile
+    const sessions = registrations.map((reg) => {
+      const session = reg.sessionId;
+
+      return {
+        ...reg,
+        sessionId: {
+          ...session,
+          alumni: session?.alumniId
             ? {
-                _id: alumniProfile._id,
-                name: alumniProfile.userId?.name || null,
-                jobTitle: alumniProfile.jobTitle || null,
-                profileImage: alumniProfile.profileImage || null,
+                _id: session.alumniId._id,
+                name: session.alumniId.userId?.name || null,
+                jobTitle: session.alumniId.jobTitle || null,
+                profileImage: session.alumniId.profileImage || null,
               }
-            : null;
-        }
-        return regObj;
-      }),
-    );
+            : null,
+        },
+      };
+    });
 
-    res.json({ success: true, sessions: populated });
+    res.json({ success: true, sessions });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -202,14 +233,19 @@ exports.getSessionById = async (req, res) => {
       : null;
 
     // Check if this student is already registered
-    const existing = await Registration.findOne({
+    const registration = await Registration.findOne({
       sessionId: id,
       studentId: userId,
+      isActive: true,
     });
-    s.isRegistered =
-      !!existing && ["free", "paid"].includes(existing.paymentStatus);
-    s.paymentStatus = existing?.paymentStatus || null;
+    console.log("UserId: ", userId);
+    s.isRegistered = registration ? true : false;
+    const transaction = await Transaction.findOne({
+      userId,
+      sessionId: id,
+    });
 
+    s.paymentStatus = transaction?.status || null;
     res.json({ success: true, session: s, userId });
   } catch (err) {
     console.error(err);
@@ -278,10 +314,6 @@ exports.getUpcomingSessions = async (req, res) => {
 //     const now = new Date();
 //     if (session.deadline && now > session.deadline) {
 //       return res.status(400).json({ success: false, message: "Registration deadline has passed" });
-//     }
-
-//     if (session.maxSeats && session.currentSeats >= session.maxSeats) {
-//       return res.status(400).json({ success: false, message: "Session is fully booked" });
 //     }
 
 //     const existing = await Registration.findOne({ sessionId, studentId: userId });
@@ -367,11 +399,32 @@ exports.registerSession = async (req, res) => {
     const { sessionId } = req.params;
 
     const session = await Session.findById(sessionId);
-
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
     if (session.isPaid) {
       return res.status(400).json({
         success: false,
         message: "This session requires payment",
+      });
+    }
+
+    // ✅ Status check
+    if (session.status !== "scheduled") {
+      return res.status(400).json({
+        success: false,
+        message: "Session is not available for registration",
+      });
+    }
+
+    // ✅ Deadline check
+    if (session.deadline && new Date() > session.deadline) {
+      return res.status(400).json({
+        success: false,
+        message: "Registration deadline has passed",
       });
     }
 
@@ -472,6 +525,12 @@ exports.unregisterSession = async (req, res) => {
     const registration = await Registration.findOne({
       sessionId,
       studentId: userId,
+      isActive: true,
+    });
+
+    const transaction = await Transaction.findOne({
+      userId,
+      sessionId,
     });
     if (!registration) {
       return res.status(400).json({
@@ -481,27 +540,29 @@ exports.unregisterSession = async (req, res) => {
     }
 
     // 💳 REFUND LOGIC
-    if (registration.paymentStatus === "paid") {
-      if (!registration.razorpayPaymentId) {
+    if (transaction && transaction.status === "paid") {
+      if (!transaction.razorpayPaymentId) {
         return res.status(400).json({
           success: false,
           message: "No payment found",
         });
       }
 
-      // 🟡 STEP 1: mark pending
-      registration.paymentStatus = "refund_pending";
+      registration.isActive = false;
       await registration.save();
 
+      // 🟡 STEP 1: mark pending
+      transaction.status = "refund_pending";
+      await transaction.save();
+
       try {
-        const session = await Session.findById(sessionId);
-        await razorpay.payments.refund(registration.razorpayPaymentId, {
+        await razorpay.payments.refund(transaction.razorpayPaymentId, {
           amount: session.price * 100, // in paise
         });
         // webhook will update to "refunded"
       } catch (err) {
-        registration.paymentStatus = "paid"; // rollback
-        await registration.save();
+        transaction.status = "paid"; // rollback
+        await transaction.save();
         console.log(err);
         return res.status(500).json({
           success: false,
@@ -511,7 +572,7 @@ exports.unregisterSession = async (req, res) => {
 
       // Decrement seats and remove from group even for refund_pending
     } else {
-      registration.paymentStatus = "cancelled";
+      registration.isActive = false;
       await registration.save();
     }
 
@@ -586,7 +647,7 @@ exports.unregisterSession = async (req, res) => {
     res.json({
       success: true,
       message:
-        registration.paymentStatus === "refund_pending"
+        transaction?.status === "refund_pending"
           ? "Unregistered successfully. Refund will be processed within 5–7 working days."
           : "Successfully unregistered from the session",
     });
@@ -723,6 +784,7 @@ exports.getSessionMeetLink = async (req, res) => {
     const registration = await Registration.findOne({
       sessionId,
       studentId: userId,
+      isActive: true,
     });
     if (!registration)
       return res.status(403).json({
@@ -765,6 +827,7 @@ exports.submitReview = async (req, res) => {
     const registration = await Registration.findOne({
       sessionId,
       studentId: userId,
+      isActive: true,
     });
     if (!registration)
       return res.status(403).json({

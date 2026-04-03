@@ -9,7 +9,14 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["session_booking", "group_invite", "session_cancelled", "new_session", "session_live", "session_completed"],
+      enum: [
+        "session_booking",
+        "group_invite",
+        "session_cancelled",
+        "new_session",
+        "session_live",
+        "session_completed",
+      ],
       required: true,
     },
     message: {
@@ -25,7 +32,12 @@ const notificationSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+notificationSchema.post("save", function (doc) {
+  const sendNotificationEmail = require("../utils/sendNotificationEmail");
+  sendNotificationEmail(doc); // fire-and-forget
+});
 
 module.exports = mongoose.model("Notification", notificationSchema);

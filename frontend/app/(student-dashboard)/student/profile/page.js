@@ -2,7 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "../../../context/ToastContext";
-import { Pencil, X, Plus, User, GraduationCap, BookOpen, Camera } from "lucide-react";
+import {
+  Pencil,
+  X,
+  Plus,
+  User,
+  GraduationCap,
+  BookOpen,
+  Camera,
+} from "lucide-react";
 import "./profile.css";
 import Loader from "../../../components/Loader";
 
@@ -11,21 +19,30 @@ export default function StudentProfilePage() {
   const [profile, setProfile] = useState(null);
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ name: "", department: "", batchYear: "", interests: [] });
+  const [form, setForm] = useState({
+    name: "",
+    department: "",
+    batchYear: "",
+    interests: [],
+  });
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [interestInput, setInterestInput] = useState("");
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         const data = await res.json();
         if (data.success) {
           setProfile(data.profile);
@@ -92,7 +109,7 @@ export default function StudentProfilePage() {
       return;
     }
     setFormError("");
-
+    setSaving(true);
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
@@ -104,11 +121,14 @@ export default function StudentProfilePage() {
         formData.append("profileImage", imageFile);
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/profile`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        },
+      );
 
       const data = await res.json();
       if (data.success) {
@@ -122,6 +142,8 @@ export default function StudentProfilePage() {
     } catch (err) {
       console.error("Failed to save profile", err);
       showToast("error", "Something went wrong");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -156,7 +178,8 @@ export default function StudentProfilePage() {
                   {profile.department && <span>{profile.department}</span>}
                   {profile.department && profile.batchYear && <span> • </span>}
                   {profile.batchYear && <span>Batch {profile.batchYear}</span>}
-                  {(profile.department || profile.batchYear) && user.college && <span> • </span>}
+                  {(profile.department || profile.batchYear) &&
+                    user.college && <span> • </span>}
                   {user.college && <span>{user.college}</span>}
                 </p>
               </div>
@@ -164,10 +187,14 @@ export default function StudentProfilePage() {
 
             {profile.interests && profile.interests.length > 0 && (
               <div className="interests-section">
-                <h4><BookOpen size={15} /> Interests</h4>
+                <h4>
+                  <BookOpen size={15} /> Interests
+                </h4>
                 <div className="interests-tags">
                   {profile.interests.map((interest) => (
-                    <span key={interest} className="interest-tag">{interest}</span>
+                    <span key={interest} className="interest-tag">
+                      {interest}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -182,7 +209,11 @@ export default function StudentProfilePage() {
             {/* Edit Mode */}
             <div className="edit-form">
               {/* Image upload */}
-              <div className="avatar-wrapper" onClick={() => fileInputRef.current?.click()} style={{ cursor: "pointer" }}>
+              <div
+                className="avatar-wrapper"
+                onClick={() => fileInputRef.current?.click()}
+                style={{ cursor: "pointer" }}
+              >
                 {avatarSrc ? (
                   <img src={avatarSrc} alt="Profile" className="avatar-img" />
                 ) : (
@@ -208,7 +239,9 @@ export default function StudentProfilePage() {
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="Your name"
                 />
               </div>
@@ -219,7 +252,9 @@ export default function StudentProfilePage() {
                 <input
                   type="text"
                   value={form.department}
-                  onChange={(e) => setForm((prev) => ({ ...prev, department: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, department: e.target.value }))
+                  }
                   placeholder="e.g. Computer Science"
                 />
               </div>
@@ -230,7 +265,9 @@ export default function StudentProfilePage() {
                 <input
                   type="number"
                   value={form.batchYear}
-                  onChange={(e) => setForm((prev) => ({ ...prev, batchYear: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, batchYear: e.target.value }))
+                  }
                   placeholder="e.g. 2025"
                 />
               </div>
@@ -258,9 +295,16 @@ export default function StudentProfilePage() {
                     value={interestInput}
                     onChange={(e) => setInterestInput(e.target.value)}
                     placeholder="Add an interest"
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddInterest())}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      (e.preventDefault(), handleAddInterest())
+                    }
                   />
-                  <button type="button" className="btn-secondary" onClick={handleAddInterest}>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleAddInterest}
+                  >
                     <Plus size={15} /> Add
                   </button>
                 </div>
@@ -269,8 +313,20 @@ export default function StudentProfilePage() {
               {formError && <p className="form-error">{formError}</p>}
 
               <div className="form-actions">
-                <button className="btn-primary" onClick={handleSave}>Save</button>
-                <button className="btn-secondary" onClick={handleCancel}>Cancel</button>
+                <button
+                  className="btn-primary"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={handleCancel}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </>

@@ -678,11 +678,33 @@ export default function AlumniMessagesPage() {
       const receiverId = String(msg.receiverId?._id || msg.receiverId);
       // The conversation partner is whoever is NOT me
       const partnerId = senderId === String(myIdNow) ? receiverId : senderId;
-      setConversations((prev) =>
-        prev.map((c) =>
-          String(c._id) === partnerId ? { ...c, lastMessage: msg } : c,
-        ),
-      );
+
+      setConversations((prev) => {
+        const exists = prev.find((c) => String(c._id) === partnerId);
+        if (exists) {
+          return prev.map((c) =>
+            String(c._id) === partnerId ? { ...c, lastMessage: msg } : c,
+          );
+        }
+        // New conversation — build a minimal entry from the message
+        const partnerUser =
+          senderId === String(myIdNow)
+            ? {
+                _id: receiverId,
+                name: msg.receiverId?.name || "User",
+                role: msg.receiverId?.role || "student",
+              }
+            : {
+                _id: senderId,
+                name: msg.senderId?.name || "User",
+                role: msg.senderId?.role || "student",
+              };
+        return [
+          { _id: partnerId, user: partnerUser, lastMessage: msg },
+          ...prev,
+        ];
+      });
+
       const isOpen =
         selectedRef.current?.type === "direct" &&
         String(selectedRef.current?.id) === partnerId;

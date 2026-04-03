@@ -9,9 +9,8 @@ const collections = [
   "payments",
   "registrations",
   "reviews",
-  "experiences",
-  "achievements",
-  "projects",
+  "bookings",
+  "transactions",
 ];
 
 async function clearData() {
@@ -20,7 +19,9 @@ async function clearData() {
 
   for (const col of collections) {
     try {
-      const result = await mongoose.connection.db.collection(col).deleteMany({});
+      const result = await mongoose.connection.db
+        .collection(col)
+        .deleteMany({});
       console.log(`✓ Cleared ${col}: ${result.deletedCount} documents removed`);
     } catch (err) {
       console.log(`⚠ Skipped ${col}: ${err.message}`);

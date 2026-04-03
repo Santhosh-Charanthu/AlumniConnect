@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Calendar, Clock, Users, Tag, CheckCircle } from "lucide-react";
+import { Calendar, Clock, Tag, CheckCircle } from "lucide-react";
 import { authFetch } from "../../../../../src/services/authFetch";
 import axios from "axios";
 import "../../explore-sessions/explore-sessions.css";
@@ -43,19 +43,24 @@ export default function SessionDetailPage() {
 
   const handlePayment = async () => {
     try {
-      // 🔥 1. Create order from backend
+      const token = localStorage.getItem("token");
       const { data } = await axios.post(
-        "http://localhost:5000/api/payment/create-order",
-        { studentId, sessionId: id },
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/create-order`,
+        { sessionId: id },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
+      if (!data.success) {
+        showToast("error", data.message || "Could not create order");
+        return;
+      }
+
       const order = data.order;
-      console.log(order);
 
       // 🔥 2. Razorpay options
       const options = {
-        key: `${process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID}`, // your Razorpay KEY_ID
-        // amount: order.amount,
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
         currency: "INR",
         name: "AlumniConnect",
         description: "Session Booking",
@@ -66,14 +71,18 @@ export default function SessionDetailPage() {
           console.log("Payment Success:", response);
 
           const verifyRes = await axios.post(
-            "http://localhost:5000/api/payment/verify-payment",
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/payment/verify-payment`,
             {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               amount: session.price,
-              studentId: studentId,
               sessionId: id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
           );
 
@@ -152,7 +161,7 @@ export default function SessionDetailPage() {
   if (loading) return <Loader />;
   if (!session) return <div style={{ padding: 30 }}>Session not found.</div>;
 
-  const seatsLeft = (session.maxSeats || 0) - (session.currentSeats || 0);
+  const isFullyBooked = false; // no seat limit
 
   return (
     <>
@@ -243,15 +252,6 @@ export default function SessionDetailPage() {
                   <span>{session.duration} minutes</span>
                 </div>
               </div>
-              <div className="es-sidebar-row">
-                <Users size={16} />
-                <div>
-                  <label>Seats Available</label>
-                  <span>
-                    {seatsLeft} / {session.maxSeats || "—"}
-                  </span>
-                </div>
-              </div>
               {session.category && (
                 <div className="es-sidebar-row">
                   <Tag size={16} />
@@ -282,7 +282,7 @@ export default function SessionDetailPage() {
                 {session.price === 0 ? "Free" : `₹${session.price}`}
               </div>
 
-              {session.paymentStatus && (
+              {/* {session.paymentStatus && (
                 <div
                   className={`es-payment-status es-payment-status--${session.paymentStatus}`}
                 >
@@ -294,8 +294,7 @@ export default function SessionDetailPage() {
                   {session.paymentStatus === "refunded" && "🔵 Refunded"}
                   {session.paymentStatus === "cancelled" && "⚫ Cancelled"}
                 </div>
-              )}
-
+              )} */}
               {session.isRegistered ? (
                 <div className="es-registered-confirm">
                   <CheckCircle size={18} /> You&apos;re registered
@@ -303,10 +302,10 @@ export default function SessionDetailPage() {
               ) : (
                 <button
                   className="es-book-btn"
-                  disabled={seatsLeft <= 0 || booking}
+                  disabled={booking}
                   onClick={() => setShowConfirm(true)}
                 >
-                  {seatsLeft <= 0 ? "Fully Booked" : "Book Session"}
+                  Book Session
                 </button>
               )}
             </div>

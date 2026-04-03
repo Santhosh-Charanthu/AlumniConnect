@@ -11,6 +11,7 @@ import {
   Bell,
   MessageSquare,
   LogOut,
+  Receipt,
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 import { useMessages } from "../context/MessageContext";
@@ -28,20 +29,33 @@ export default function StudentSidebar({ isOpen, setIsOpen }) {
   };
 
   const menuItems = [
-    { name: "Dashboard",        href: "/student/dashboard",        icon: LayoutDashboard },
-    { name: "My Sessions",      href: "/student/my-sessions",      icon: CalendarCheck },
-    { name: "Explore Sessions", href: "/student/explore-sessions", icon: MonitorPlay },
-    { name: "Explore Alumni",   href: "/student/explore-alumni",   icon: Compass },
-    { name: "Profile",          href: "/student/profile",          icon: User },
-    { name: "Notifications",    href: "/student/notifications",    icon: Bell, badge: unreadCount },
-    { name: "Messaging",        href: "/student/messages",         icon: MessageSquare, badge: unreadMessages },
+    { name: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+    { name: "My Sessions", href: "/student/my-sessions", icon: CalendarCheck },
+    { name: "My Bookings", href: "/student/my-bookings", icon: Receipt },
+    {
+      name: "Explore Sessions",
+      href: "/student/explore-sessions",
+      icon: MonitorPlay,
+    },
+    { name: "Explore Alumni", href: "/student/explore-alumni", icon: Compass },
+    { name: "Profile", href: "/student/profile", icon: User },
+    {
+      name: "Notifications",
+      href: "/student/notifications",
+      icon: Bell,
+      badge: unreadCount,
+    },
+    {
+      name: "Messaging",
+      href: "/student/messages",
+      icon: MessageSquare,
+      badge: unreadMessages,
+    },
   ];
 
   return (
     <>
-      {isOpen && (
-        <div className="overlay" onClick={() => setIsOpen(false)} />
-      )}
+      {isOpen && <div className="overlay" onClick={() => setIsOpen(false)} />}
 
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
         {/* Collapsed: single letter icon */}

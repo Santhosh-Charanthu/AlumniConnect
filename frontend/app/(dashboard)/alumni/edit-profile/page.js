@@ -16,13 +16,12 @@ export default function EditProfilePage() {
 
   const [branchOpen, setBranchOpen] = useState(false);
   const [branch, setBranch] = useState("");
-
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [skillInput, setSkillInput] = useState("");
   const [showSkillDropdown, setShowSkillDropdown] = useState(false);
-
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [existingImage, setExistingImage] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const branches = ["CSE", "AIML", "IT", "AIDS", "ECE", "CIVIL", "EEE", "MECH"];
 
@@ -71,11 +70,14 @@ export default function EditProfilePage() {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await res.json();
 
@@ -119,16 +121,26 @@ export default function EditProfilePage() {
     if (!form.name?.trim()) errs.name = "Full name is required.";
     if (!form.college?.trim()) errs.college = "College name is required.";
     if (!branch) errs.department = "Please select your branch.";
-    if (!form.batchYear?.toString().trim()) errs.batchYear = "Batch year is required.";
-    else if (!/^\d{4}$/.test(form.batchYear)) errs.batchYear = "Enter a valid 4-digit year.";
+    if (!form.batchYear?.toString().trim())
+      errs.batchYear = "Batch year is required.";
+    else if (!/^\d{4}$/.test(form.batchYear))
+      errs.batchYear = "Enter a valid 4-digit year.";
     if (!form.company?.trim()) errs.company = "Company is required.";
-    if (form.hourlyRate !== "" && form.hourlyRate !== undefined && Number(form.hourlyRate) < 0) errs.hourlyRate = "Hourly rate cannot be negative.";
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (
+      form.hourlyRate !== "" &&
+      form.hourlyRate !== undefined &&
+      Number(form.hourlyRate) < 0
+    )
+      errs.hourlyRate = "Hourly rate cannot be negative.";
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
+    setSubmitting(true);
     const formData = new FormData();
 
     Object.keys(form).forEach((key) => {
-      // ❌ do not update email
       if (key === "email") return;
       formData.append(key, form[key]);
     });
@@ -139,21 +151,28 @@ export default function EditProfilePage() {
 
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/profile`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        },
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.success) {
-      showToast("success", "Profile updated successfully");
-      router.push("/alumni/profile");
-    } else {
-      showToast("error", data.message || "Update failed");
+      if (data.success) {
+        showToast("success", "Profile updated successfully");
+        router.push("/alumni/profile");
+      } else {
+        showToast("error", data.message || "Update failed");
+      }
+    } catch (err) {
+      showToast("error", "Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -177,7 +196,9 @@ export default function EditProfilePage() {
                 value={form.name || ""}
                 onChange={handleChange}
               />
-              {errors.name && <p className={styles.fieldError}>{errors.name}</p>}
+              {errors.name && (
+                <p className={styles.fieldError}>{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -198,7 +219,9 @@ export default function EditProfilePage() {
                 value={form.college || ""}
                 onChange={handleChange}
               />
-              {errors.college && <p className={styles.fieldError}>{errors.college}</p>}
+              {errors.college && (
+                <p className={styles.fieldError}>{errors.college}</p>
+              )}
             </div>
 
             {/* Branch */}
@@ -231,7 +254,9 @@ export default function EditProfilePage() {
                   </div>
                 )}
               </div>
-              {errors.department && <p className={styles.fieldError}>{errors.department}</p>}
+              {errors.department && (
+                <p className={styles.fieldError}>{errors.department}</p>
+              )}
             </div>
 
             <div>
@@ -242,7 +267,9 @@ export default function EditProfilePage() {
                 value={form.batchYear || ""}
                 onChange={handleChange}
               />
-              {errors.batchYear && <p className={styles.fieldError}>{errors.batchYear}</p>}
+              {errors.batchYear && (
+                <p className={styles.fieldError}>{errors.batchYear}</p>
+              )}
             </div>
 
             <div>
@@ -254,7 +281,9 @@ export default function EditProfilePage() {
                 onChange={handleChange}
                 required
               />
-              {errors.company && <p className={styles.fieldError}>{errors.company}</p>}
+              {errors.company && (
+                <p className={styles.fieldError}>{errors.company}</p>
+              )}
             </div>
 
             <div>
@@ -339,7 +368,9 @@ export default function EditProfilePage() {
                 value={form.hourlyRate || ""}
                 onChange={handleChange}
               />
-              {errors.hourlyRate && <p className={styles.fieldError}>{errors.hourlyRate}</p>}
+              {errors.hourlyRate && (
+                <p className={styles.fieldError}>{errors.hourlyRate}</p>
+              )}
             </div>
 
             <div>
@@ -401,8 +432,18 @@ export default function EditProfilePage() {
             </div>
           </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            Update Profile
+          <button
+            type="submit"
+            className={styles.submitBtn}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <span className={styles.btnSpinner} /> Saving...
+              </>
+            ) : (
+              "Update Profile"
+            )}
           </button>
         </div>
       </div>

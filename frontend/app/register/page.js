@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const otpRefs = useRef([]);
   const timerRef = useRef(null);
 
@@ -43,25 +44,55 @@ export default function RegisterPage() {
   const [showInterestDropdown, setShowInterestDropdown] = useState(false);
 
   const predefinedSkills = [
-    "Java","Python","C","C++","JavaScript","TypeScript","React","Next.js",
-    "Node.js","Express","MongoDB","System Design","DSA","Machine Learning",
-    "Data Science","Cloud Computing","DevOps","Cyber Security",
+    "Java",
+    "Python",
+    "C",
+    "C++",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Next.js",
+    "Node.js",
+    "Express",
+    "MongoDB",
+    "System Design",
+    "DSA",
+    "Machine Learning",
+    "Data Science",
+    "Cloud Computing",
+    "DevOps",
+    "Cyber Security",
   ];
 
   const predefinedInterests = [
-    "Web Development","App Development","Machine Learning","Artificial Intelligence",
-    "Data Science","Competitive Programming","DSA","Open Source","Hackathons",
-    "Startups","Cyber Security","Cloud Computing","UI/UX Design","Robotics",
+    "Web Development",
+    "App Development",
+    "Machine Learning",
+    "Artificial Intelligence",
+    "Data Science",
+    "Competitive Programming",
+    "DSA",
+    "Open Source",
+    "Hackathons",
+    "Startups",
+    "Cyber Security",
+    "Cloud Computing",
+    "UI/UX Design",
+    "Robotics",
   ];
 
   const filteredSkills = predefinedSkills.filter(
-    (s) => s.toLowerCase().includes(skillInput.toLowerCase()) && !selectedSkills.includes(s)
+    (s) =>
+      s.toLowerCase().includes(skillInput.toLowerCase()) &&
+      !selectedSkills.includes(s),
   );
   const filteredInterests = predefinedInterests.filter(
-    (i) => i.toLowerCase().includes(interestInput.toLowerCase()) && !selectedInterests.includes(i)
+    (i) =>
+      i.toLowerCase().includes(interestInput.toLowerCase()) &&
+      !selectedInterests.includes(i),
   );
 
-  const branches = ["CSE","AIML","IT","AIDS","ECE","CIVIL","EEE","MECH"];
+  const branches = ["CSE", "AIML", "IT", "AIDS", "ECE", "CIVIL", "EEE", "MECH"];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -74,7 +105,10 @@ export default function RegisterPage() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setResendTimer((t) => {
-        if (t <= 1) { clearInterval(timerRef.current); return 0; }
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
         return t - 1;
       });
     }, 1000);
@@ -85,10 +119,16 @@ export default function RegisterPage() {
   // ── Send OTP ───────────────────────────────────────────────────────────────
   const handleSendOtp = async () => {
     const email = form.email?.trim();
-    if (!email) { showToast("error", "Please enter your email first"); return; }
+    if (!email) {
+      showToast("error", "Please enter your email first");
+      return;
+    }
 
     const emailParts = email.split("@");
-    if (emailParts.length !== 2 || !emailParts[1].toLowerCase().includes(".edu")) {
+    if (
+      emailParts.length !== 2 ||
+      !emailParts[1].toLowerCase().includes(".edu")
+    ) {
       showToast("error", "Please use your college email with a .edu domain");
       return;
     }
@@ -96,7 +136,10 @@ export default function RegisterPage() {
     setSendingOtp(true);
     try {
       const res = await sendOtp(email);
-      if (!res.success) { showToast("error", res.message); return; }
+      if (!res.success) {
+        showToast("error", res.message);
+        return;
+      }
       setShowOtpModal(true);
       setOtpDigits(Array(OTP_LENGTH).fill(""));
       setOtpVerified(false);
@@ -125,7 +168,10 @@ export default function RegisterPage() {
   };
 
   const handleOtpPaste = (e) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, OTP_LENGTH);
     if (pasted.length === OTP_LENGTH) {
       setOtpDigits(pasted.split(""));
       otpRefs.current[OTP_LENGTH - 1]?.focus();
@@ -135,12 +181,18 @@ export default function RegisterPage() {
   // ── Verify OTP ─────────────────────────────────────────────────────────────
   const handleVerifyOtp = async () => {
     const otp = otpDigits.join("");
-    if (otp.length < OTP_LENGTH) { showToast("error", "Please enter the complete 6-digit OTP"); return; }
+    if (otp.length < OTP_LENGTH) {
+      showToast("error", "Please enter the complete 6-digit OTP");
+      return;
+    }
 
     setOtpLoading(true);
     try {
       const res = await verifyOtp(form.email, otp);
-      if (!res.success) { showToast("error", res.message); return; }
+      if (!res.success) {
+        showToast("error", res.message);
+        return;
+      }
       setOtpVerified(true);
       setShowOtpModal(false);
       showToast("success", "Email verified successfully ✅");
@@ -156,14 +208,18 @@ export default function RegisterPage() {
     const errs = {};
     if (!form.name?.trim()) errs.name = "Full name is required.";
     if (!form.email?.trim()) errs.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = "Enter a valid email address.";
     if (!branch) errs.department = "Please select your branch.";
     if (!form.batchYear?.trim()) errs.batchYear = "Batch year is required.";
-    else if (!/^\d{4}$/.test(form.batchYear)) errs.batchYear = "Enter a valid 4-digit year.";
+    else if (!/^\d{4}$/.test(form.batchYear))
+      errs.batchYear = "Enter a valid 4-digit year.";
     if (!form.password) errs.password = "Password is required.";
-    else if (form.password.length < 6) errs.password = "Password must be at least 6 characters.";
+    else if (form.password.length < 6)
+      errs.password = "Password must be at least 6 characters.";
     if (!image) errs.profileImage = "Profile image is required.";
-    if (role === "alumni" && !form.company?.trim()) errs.company = "Company is required.";
+    if (role === "alumni" && !form.company?.trim())
+      errs.company = "Company is required.";
     return errs;
   };
 
@@ -176,7 +232,10 @@ export default function RegisterPage() {
     }
 
     const errs = validateForm();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     const formData = new FormData();
     Object.keys(form).forEach((key) => {
@@ -188,14 +247,20 @@ export default function RegisterPage() {
     formData.append("skills", JSON.stringify(selectedSkills));
     formData.append("interests", JSON.stringify(selectedInterests));
 
+    setSubmitting(true);
     try {
       const res = await registerUser(formData);
-      if (!res.success) { showToast("error", res.message); return; }
+      if (!res.success) {
+        showToast("error", res.message);
+        return;
+      }
       localStorage.setItem("token", res.token);
       showToastAfterRedirect("success", res.message);
       router.push(`/${res.user.role}/dashboard`);
     } catch (err) {
       showToast("error", err?.message || "Registration failed. Try again!");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -205,7 +270,13 @@ export default function RegisterPage() {
       {showOtpModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
-            <button className={styles.modalClose} onClick={() => setShowOtpModal(false)} aria-label="Close">×</button>
+            <button
+              className={styles.modalClose}
+              onClick={() => setShowOtpModal(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
             <h2 className={styles.modalTitle}>Verify your email</h2>
             <p className={styles.modalSubtitle}>
               We sent a 6-digit code to <strong>{form.email}</strong>
@@ -238,7 +309,9 @@ export default function RegisterPage() {
 
             <div className={styles.resendRow}>
               {resendTimer > 0 ? (
-                <span className={styles.resendTimer}>Resend OTP in {resendTimer}s</span>
+                <span className={styles.resendTimer}>
+                  Resend OTP in {resendTimer}s
+                </span>
               ) : (
                 <button
                   type="button"
@@ -264,10 +337,18 @@ export default function RegisterPage() {
             </div>
 
             <div className={styles.roleTabs}>
-              <button type="button" className={`${styles.roleTab} ${role === "student" ? styles.activeRole : ""}`} onClick={() => setRole("student")}>
+              <button
+                type="button"
+                className={`${styles.roleTab} ${role === "student" ? styles.activeRole : ""}`}
+                onClick={() => setRole("student")}
+              >
                 As Student
               </button>
-              <button type="button" className={`${styles.roleTab} ${role === "alumni" ? styles.activeRole : ""}`} onClick={() => setRole("alumni")}>
+              <button
+                type="button"
+                className={`${styles.roleTab} ${role === "alumni" ? styles.activeRole : ""}`}
+                onClick={() => setRole("alumni")}
+              >
                 As Alumni
               </button>
             </div>
@@ -276,8 +357,14 @@ export default function RegisterPage() {
               {/* Full Name */}
               <div>
                 <label className={styles.label}>Full Name</label>
-                <input name="name" className={styles.input} onChange={handleChange} />
-                {errors.name && <p className={styles.fieldError}>{errors.name}</p>}
+                <input
+                  name="name"
+                  className={styles.input}
+                  onChange={handleChange}
+                />
+                {errors.name && (
+                  <p className={styles.fieldError}>{errors.name}</p>
+                )}
               </div>
 
               {/* Email + OTP trigger */}
@@ -304,13 +391,20 @@ export default function RegisterPage() {
                     </button>
                   )}
                 </div>
-                {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
+                {errors.email && (
+                  <p className={styles.fieldError}>{errors.email}</p>
+                )}
               </div>
 
               {/* College */}
               <div>
                 <label className={styles.label}>College Name</label>
-                <input name="college" className={styles.input} placeholder="e.g. IIT Hyderabad" onChange={handleChange} />
+                <input
+                  name="college"
+                  className={styles.input}
+                  placeholder="e.g. IIT Hyderabad"
+                  onChange={handleChange}
+                />
               </div>
 
               {/* Branch */}
@@ -321,27 +415,50 @@ export default function RegisterPage() {
                     className={`${styles.dropdownControl} ${branchOpen ? styles.dropdownControlActive : ""}`}
                     onClick={() => setBranchOpen(!branchOpen)}
                   >
-                    <span className={branch ? "" : styles.dropdownPlaceholder}>{branch || "Select your branch..."}</span>
-                    <span className={`${styles.dropdownArrow} ${branchOpen ? styles.arrowOpen : ""}`}>▾</span>
+                    <span className={branch ? "" : styles.dropdownPlaceholder}>
+                      {branch || "Select your branch..."}
+                    </span>
+                    <span
+                      className={`${styles.dropdownArrow} ${branchOpen ? styles.arrowOpen : ""}`}
+                    >
+                      ▾
+                    </span>
                   </div>
                   {branchOpen && (
                     <div className={styles.dropdownMenu}>
                       {branches.map((b) => (
-                        <div key={b} className={styles.dropdownItem} onClick={() => { setBranch(b); setForm({ ...form, department: b }); setBranchOpen(false); setErrors((prev) => ({ ...prev, department: "" })); }}>
+                        <div
+                          key={b}
+                          className={styles.dropdownItem}
+                          onClick={() => {
+                            setBranch(b);
+                            setForm({ ...form, department: b });
+                            setBranchOpen(false);
+                            setErrors((prev) => ({ ...prev, department: "" }));
+                          }}
+                        >
                           {b}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-                {errors.department && <p className={styles.fieldError}>{errors.department}</p>}
+                {errors.department && (
+                  <p className={styles.fieldError}>{errors.department}</p>
+                )}
               </div>
 
               {/* Batch Year */}
               <div>
                 <label className={styles.label}>Batch Year</label>
-                <input name="batchYear" className={styles.input} onChange={handleChange} />
-                {errors.batchYear && <p className={styles.fieldError}>{errors.batchYear}</p>}
+                <input
+                  name="batchYear"
+                  className={styles.input}
+                  onChange={handleChange}
+                />
+                {errors.batchYear && (
+                  <p className={styles.fieldError}>{errors.batchYear}</p>
+                )}
               </div>
 
               {/* Student Interests */}
@@ -353,19 +470,47 @@ export default function RegisterPage() {
                       {selectedInterests.map((i) => (
                         <span key={i} className={styles.skillPill}>
                           {i}
-                          <button type="button" onClick={() => setSelectedInterests(selectedInterests.filter((x) => x !== i))} className={styles.removeSkill}>×</button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedInterests(
+                                selectedInterests.filter((x) => x !== i),
+                              )
+                            }
+                            className={styles.removeSkill}
+                          >
+                            ×
+                          </button>
                         </span>
                       ))}
                     </div>
                   )}
                   <div className={styles.searchWrapper}>
-                    <input type="text" className={styles.input} placeholder="Search interests..." value={interestInput}
-                      onChange={(e) => { setInterestInput(e.target.value); setShowInterestDropdown(true); }}
-                      onFocus={() => setShowInterestDropdown(true)} />
+                    <input
+                      type="text"
+                      className={styles.input}
+                      placeholder="Search interests..."
+                      value={interestInput}
+                      onChange={(e) => {
+                        setInterestInput(e.target.value);
+                        setShowInterestDropdown(true);
+                      }}
+                      onFocus={() => setShowInterestDropdown(true)}
+                    />
                     {showInterestDropdown && filteredInterests.length > 0 && (
                       <div className={styles.skillDropdown}>
                         {filteredInterests.map((i) => (
-                          <div key={i} className={styles.skillOption} onClick={() => { setSelectedInterests([...selectedInterests, i]); setInterestInput(""); setShowInterestDropdown(false); }}>{i}</div>
+                          <div
+                            key={i}
+                            className={styles.skillOption}
+                            onClick={() => {
+                              setSelectedInterests([...selectedInterests, i]);
+                              setInterestInput("");
+                              setShowInterestDropdown(false);
+                            }}
+                          >
+                            {i}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -376,8 +521,15 @@ export default function RegisterPage() {
               {/* Password */}
               <div>
                 <label className={styles.label}>Password</label>
-                <input type="password" name="password" className={styles.input} onChange={handleChange} />
-                {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
+                <input
+                  type="password"
+                  name="password"
+                  className={styles.input}
+                  onChange={handleChange}
+                />
+                {errors.password && (
+                  <p className={styles.fieldError}>{errors.password}</p>
+                )}
               </div>
 
               {/* Alumni-only fields */}
@@ -385,12 +537,22 @@ export default function RegisterPage() {
                 <>
                   <div>
                     <label className={styles.label}>Company</label>
-                    <input name="company" className={styles.input} onChange={handleChange} />
-                    {errors.company && <p className={styles.fieldError}>{errors.company}</p>}
+                    <input
+                      name="company"
+                      className={styles.input}
+                      onChange={handleChange}
+                    />
+                    {errors.company && (
+                      <p className={styles.fieldError}>{errors.company}</p>
+                    )}
                   </div>
                   <div>
                     <label className={styles.label}>Job Title</label>
-                    <input name="jobTitle" className={styles.input} onChange={handleChange} />
+                    <input
+                      name="jobTitle"
+                      className={styles.input}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div className={styles.fullWidth}>
                     <label className={styles.label}>Skills</label>
@@ -399,19 +561,47 @@ export default function RegisterPage() {
                         {selectedSkills.map((s) => (
                           <span key={s} className={styles.skillPill}>
                             {s}
-                            <button type="button" onClick={() => setSelectedSkills(selectedSkills.filter((x) => x !== s))} className={styles.removeSkill}>×</button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedSkills(
+                                  selectedSkills.filter((x) => x !== s),
+                                )
+                              }
+                              className={styles.removeSkill}
+                            >
+                              ×
+                            </button>
                           </span>
                         ))}
                       </div>
                     )}
                     <div className={styles.searchWrapper}>
-                      <input type="text" className={styles.input} placeholder="Search skills..." value={skillInput}
-                        onChange={(e) => { setSkillInput(e.target.value); setShowSkillDropdown(true); }}
-                        onFocus={() => setShowSkillDropdown(true)} />
+                      <input
+                        type="text"
+                        className={styles.input}
+                        placeholder="Search skills..."
+                        value={skillInput}
+                        onChange={(e) => {
+                          setSkillInput(e.target.value);
+                          setShowSkillDropdown(true);
+                        }}
+                        onFocus={() => setShowSkillDropdown(true)}
+                      />
                       {showSkillDropdown && filteredSkills.length > 0 && (
                         <div className={styles.skillDropdown}>
                           {filteredSkills.map((s) => (
-                            <div key={s} className={styles.skillOption} onClick={() => { setSelectedSkills([...selectedSkills, s]); setSkillInput(""); setShowSkillDropdown(false); }}>{s}</div>
+                            <div
+                              key={s}
+                              className={styles.skillOption}
+                              onClick={() => {
+                                setSelectedSkills([...selectedSkills, s]);
+                                setSkillInput("");
+                                setShowSkillDropdown(false);
+                              }}
+                            >
+                              {s}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -419,15 +609,30 @@ export default function RegisterPage() {
                   </div>
                   <div className={styles.fullWidth}>
                     <label className={styles.label}>Bio</label>
-                    <textarea name="bio" rows="3" className={styles.input} onChange={handleChange} />
+                    <textarea
+                      name="bio"
+                      rows="3"
+                      className={styles.input}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div>
                     <label className={styles.label}>Hourly Rate (₹)</label>
-                    <input type="number" name="hourlyRate" className={styles.input} onChange={handleChange} />
+                    <input
+                      type="number"
+                      name="hourlyRate"
+                      className={styles.input}
+                      onChange={handleChange}
+                    />
                   </div>
                   <div>
                     <label className={styles.label}>Availability</label>
-                    <input name="availability" className={styles.input} placeholder="Weekends / Evenings" onChange={handleChange} />
+                    <input
+                      name="availability"
+                      className={styles.input}
+                      placeholder="Weekends / Evenings"
+                      onChange={handleChange}
+                    />
                   </div>
                 </>
               )}
@@ -435,22 +640,50 @@ export default function RegisterPage() {
               {/* Profile Image */}
               <div className={styles.fileWrapper}>
                 <label className={styles.label}>Profile Image</label>
-                <input type="file" id="profileImage" className={styles.fileInput} accept="image/*" onChange={(e) => { setImage(e.target.files[0]); setErrors((prev) => ({ ...prev, profileImage: "" })); }} />
-                <label htmlFor="profileImage" className={`${styles.fileLabel} ${image ? styles.fileSelected : ""}`}>
+                <input
+                  type="file"
+                  id="profileImage"
+                  className={styles.fileInput}
+                  accept="image/*"
+                  onChange={(e) => {
+                    setImage(e.target.files[0]);
+                    setErrors((prev) => ({ ...prev, profileImage: "" }));
+                  }}
+                />
+                <label
+                  htmlFor="profileImage"
+                  className={`${styles.fileLabel} ${image ? styles.fileSelected : ""}`}
+                >
                   {image ? image.name : "Click to upload profile image"}
                 </label>
-                <span className={styles.fileHint}>JPG / JPEG / PNG • Max size 2MB</span>
-                {errors.profileImage && <p className={styles.fieldError}>{errors.profileImage}</p>}
+                <span className={styles.fileHint}>
+                  JPG / JPEG / PNG • Max size 2MB
+                </span>
+                {errors.profileImage && (
+                  <p className={styles.fieldError}>{errors.profileImage}</p>
+                )}
               </div>
             </div>
 
-            <button type="submit" className={styles.submitBtn}>
-              Register as {role === "student" ? "Student" : "Alumni"}
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <span className={styles.btnSpinner} /> Registering...
+                </>
+              ) : (
+                `Register as ${role === "student" ? "Student" : "Alumni"}`
+              )}
             </button>
 
             <div className={styles.footer}>
               Already have an account?{" "}
-              <Link href="/login"><span>Login</span></Link>
+              <Link href="/login">
+                <span>Login</span>
+              </Link>
             </div>
           </div>
         </div>

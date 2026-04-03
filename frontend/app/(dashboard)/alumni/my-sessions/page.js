@@ -50,7 +50,6 @@ function MySessionsPageInner() {
     deadline: "",
     duration: "",
     price: "",
-    maxSeats: "",
     category: "",
     status: "",
   });
@@ -104,6 +103,13 @@ function MySessionsPageInner() {
   );
   const displaySessions = activeTab === "upcoming" ? upcoming : completed;
 
+  const formatForInput = (date) => {
+    const d = new Date(date);
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(0, 16);
+  };
+
   const handleEditClick = async (session) => {
     try {
       const token = localStorage.getItem("token");
@@ -117,15 +123,10 @@ function MySessionsPageInner() {
         setEditForm({
           title: s.title || "",
           description: s.description || "",
-          startTime: s.startTime
-            ? new Date(s.startTime).toISOString().slice(0, 16)
-            : "",
-          deadline: s.deadline
-            ? new Date(s.deadline).toISOString().slice(0, 16)
-            : "",
+          startTime: s.startTime ? formatForInput(s.startTime) : "",
+          deadline: s.deadline ? formatForInput(s.deadline) : "",
           duration: s.duration || "",
           price: s.price || "",
-          maxSeats: s.maxSeats || "",
           category: s.category || "",
           status: s.status || "",
         });
@@ -143,13 +144,25 @@ function MySessionsPageInner() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+
     const { title, startTime, duration, category } = editForm;
     if (!title || !startTime || !duration || !category) {
       setEditError("Title, start time, duration, and category are required.");
       return;
     }
+
     try {
       const token = localStorage.getItem("token");
+
+      // ✅ ADD THIS HERE
+      const payload = {
+        ...editForm,
+        startTime: new Date(editForm.startTime).toISOString(),
+        deadline: editForm.deadline
+          ? new Date(editForm.deadline).toISOString()
+          : null,
+      };
+
       const res = await fetch(
         `${API_BASE}/alumni/sessions/${editingSession._id}`,
         {
@@ -158,14 +171,17 @@ function MySessionsPageInner() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(editForm),
+          // ❗ USE payload instead of editForm
+          body: JSON.stringify(payload),
         },
       );
+
       const data = await res.json();
+
       if (data.success) {
         setSessions((prev) =>
           prev.map((s) =>
-            s._id === editingSession._id ? { ...s, ...editForm } : s,
+            s._id === editingSession._id ? { ...s, ...payload } : s,
           ),
         );
         setEditingSession(null);
@@ -614,15 +630,6 @@ function MySessionsPageInner() {
                     type="number"
                     name="price"
                     value={editForm.price}
-                    onChange={handleEditChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Max Seats</label>
-                  <input
-                    type="number"
-                    name="maxSeats"
-                    value={editForm.maxSeats}
                     onChange={handleEditChange}
                   />
                 </div>

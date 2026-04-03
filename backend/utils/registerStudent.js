@@ -1,4 +1,5 @@
 const Registration = require("../models/Registration");
+const Transaction = require("../models/Transaction");
 const Session = require("../models/Session");
 const Notification = require("../models/Notification");
 const Alumni = require("../models/Alumni");
@@ -24,22 +25,21 @@ const registerStudent = async ({
     throw new Error("Registration deadline has passed");
   }
 
-  if (session.maxSeats && session.currentSeats >= session.maxSeats) {
-    throw new Error("Session is fully booked");
+  const existing = await Registration.findOne({ sessionId, studentId: userId });
+  if (existing && existing.isActive) {
+    throw new Error("Already registered for this session");
   }
 
-  const existing = await Registration.findOne({ sessionId, studentId: userId });
-  if (existing) throw new Error("Already registered for this session");
-
-  // paid sessions get "paid", free sessions get "free"
-  const paymentStatus = razorpayPaymentId ? "paid" : "free";
-
-  await Registration.create({
-    sessionId,
-    studentId: userId,
-    paymentStatus,
-    razorpayPaymentId: razorpayPaymentId || null,
-  });
+  if (existing && !existing.isActive) {
+    existing.isActive = true;
+    await existing.save();
+  } else {
+    await Registration.create({
+      sessionId,
+      studentId: userId,
+      isActive: true,
+    });
+  }
 
   await Session.findByIdAndUpdate(sessionId, {
     $inc: { currentSeats: 1 },

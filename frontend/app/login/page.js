@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -24,7 +25,8 @@ export default function LoginPage() {
   const validate = () => {
     const errs = {};
     if (!form.email.trim()) errs.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = "Enter a valid email address.";
     if (!form.password) errs.password = "Password is required.";
     return errs;
   };
@@ -32,25 +34,27 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
+    setLoading(true);
     try {
       const res = await loginUser({ ...form, role });
 
-      // ? login failed (no token)
       if (!res.token || !res.user) {
         showToast("error", res.message || "Invalid credentials");
         return;
       }
 
-      // ? login success
       localStorage.setItem("token", res.token);
-
       showToastAfterRedirect("success", res.message || "Login successful");
-
       router.push(`/${res.user.role}/dashboard`);
     } catch (err) {
       showToast("error", err?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -98,7 +102,9 @@ export default function LoginPage() {
                 placeholder="yourname@college.edu"
                 onChange={handleChange}
               />
-              {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
+              {errors.email && (
+                <p className={styles.fieldError}>{errors.email}</p>
+              )}
             </div>
 
             <div className={styles.fullWidth}>
@@ -110,12 +116,20 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 onChange={handleChange}
               />
-              {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
+              {errors.password && (
+                <p className={styles.fieldError}>{errors.password}</p>
+              )}
             </div>
           </div>
 
-          <button type="submit" className={styles.submitBtn}>
-            Login as {role === "student" ? "Student" : "Alumni"}
+          <button type="submit" className={styles.submitBtn} disabled={loading}>
+            {loading ? (
+              <>
+                <span className={styles.btnSpinner} /> Logging in...
+              </>
+            ) : (
+              `Login as ${role === "student" ? "Student" : "Alumni"}`
+            )}
           </button>
 
           <div className={styles.footer}>

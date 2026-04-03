@@ -1,11 +1,82 @@
+const razorpay = require("../config/razorpay");
 const Alumni = require("../models/Alumni");
 const User = require("../models/User");
 const Session = require("../models/Session");
 const Review = require("../models/Review");
 const Registration = require("../models/Registration");
+const Transaction = require("../models/Transaction");
 const Notification = require("../models/Notification");
 const StudentProfile = require("../models/Student");
 const cloudinary = require("../config/cloudinary");
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const {
+      name,
+      college,
+      department,
+      batchYear,
+      company,
+      jobTitle,
+      bio,
+      hourlyRate,
+      availability,
+      skills,
+    } = req.body;
+
+    // Update User fields
+    const userUpdate = {};
+    if (name) userUpdate.name = name;
+    if (college) userUpdate.college = college;
+    if (Object.keys(userUpdate).length) {
+      await User.findByIdAndUpdate(userId, userUpdate);
+    }
+
+    // Build alumni update
+    const alumniUpdate = {};
+    if (department !== undefined) alumniUpdate.department = department;
+    if (batchYear !== undefined && batchYear !== "")
+      alumniUpdate.batchYear = Number(batchYear);
+    if (company !== undefined) alumniUpdate.company = company;
+    if (jobTitle !== undefined) alumniUpdate.jobTitle = jobTitle;
+    if (bio !== undefined) alumniUpdate.bio = bio;
+    if (hourlyRate !== undefined && hourlyRate !== "")
+      alumniUpdate.hourlyRate = Number(hourlyRate);
+    if (availability !== undefined) alumniUpdate.availability = availability;
+    if (skills !== undefined) {
+      alumniUpdate.skills =
+        typeof skills === "string" ? JSON.parse(skills) : skills;
+    }
+
+    if (req.file) {
+      // Delete old image from Cloudinary
+      const existing = await Alumni.findOne({ userId });
+      if (existing?.profileImage?.filename) {
+        await cloudinary.uploader.destroy(existing.profileImage.filename);
+      }
+      alumniUpdate.profileImage = {
+        url: req.file.path,
+        filename: req.file.filename,
+      };
+    }
+
+    const alumni = await Alumni.findOneAndUpdate({ userId }, alumniUpdate, {
+      new: true,
+    });
+    const user = await User.findById(userId).select("name email college");
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      alumni,
+      user,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 exports.getMyProfile = async (req, res) => {
   try {
@@ -81,7 +152,6 @@ exports.createSession = async (req, res) => {
       deadline,
       duration,
       price,
-      maxSeats,
       category,
     } = req.body;
 
@@ -124,7 +194,6 @@ exports.createSession = async (req, res) => {
       price,
       isPaid: price > 0,
       coverImage,
-      maxSeats,
       category,
     });
 
@@ -284,21 +353,28 @@ exports.updateSession = async (req, res) => {
       deadline,
       duration,
       price,
-      maxSeats,
       category,
       status,
     } = req.body;
     const updateData = {
       title,
       description,
-      startTime,
-      deadline,
       duration,
       price,
-      maxSeats,
       category,
       status,
     };
+
+    if (startTime !== undefined) {
+      updateData.startTime = new Date(startTime);
+    }
+
+    if (deadline !== undefined) {
+      updateData.deadline = new Date(deadline);
+    }
+
+    console.log("Incoming startTime:", startTime);
+    console.log("Converted:", new Date(startTime));
 
     // Remove undefined fields
     Object.keys(updateData).forEach(
@@ -369,8 +445,26 @@ exports.deleteSession = async (req, res) => {
     const registrations = await Registration.find({ sessionId: id }).select(
       "studentId",
     );
-    const studentIds = registrations.map((r) => r.studentId);
+    const transactions = await Transaction.find({ sessionId: id });
+    await Promise.allSettled(
+      transactions.map(async (tx) => {
+        if (tx.status !== "paid") return;
+        if (!tx.razorpayPaymentId) return;
 
+        try {
+          tx.status = "refund_pending";
+          await tx.save();
+
+          await razorpay.payments.refund(tx.razorpayPaymentId, {
+            amount: tx.amount * 100,
+          });
+        } catch (err) {
+          console.error("Refund failed for:", tx._id, err);
+        }
+      }),
+    );
+    await Registration.updateMany({ sessionId: id }, { isActive: false });
+    const studentIds = registrations.map((r) => r.studentId);
     // Notify each registered student
     const notifPromises = studentIds.map((studentId) =>
       Notification.create({
@@ -535,32 +629,45 @@ exports.getSessionParticipants = async (req, res) => {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    const registrations = await Registration.find({ sessionId: id })
+    const registrations = await Registration.find({
+      sessionId: id,
+      isActive: true,
+    })
       .populate("studentId", "name email")
       .sort({ createdAt: -1 });
-
-    // Enrich with student profile (department, batchYear, profileImage)
-    const participants = await Promise.all(
-      registrations.map(async (reg) => {
-        const profile = await StudentProfile.findOne({
-          userId: reg.studentId._id,
-        });
-        return {
-          _id: reg._id,
-          registeredAt: reg.createdAt,
-          paymentStatus: reg.paymentStatus,
-          attended: reg.attended,
-          student: {
-            _id: reg.studentId._id,
-            name: reg.studentId.name,
-            email: reg.studentId.email,
-            department: profile?.department || null,
-            batchYear: profile?.batchYear || null,
-            profileImage: profile?.profileImage || null,
-          },
-        };
-      }),
+    // 🔥 Fetch transactions
+    const transactions = await Transaction.find({ sessionId: id });
+    const txMap = new Map(
+      transactions.map((tx) => [tx.userId.toString(), tx.status]),
     );
+
+    // 🔥 Fetch profiles in one go
+    const studentIds = registrations.map((r) => r.studentId._id);
+    const profiles = await StudentProfile.find({
+      userId: { $in: studentIds },
+    });
+    const profileMap = new Map(profiles.map((p) => [p.userId.toString(), p]));
+
+    // 🔥 Map
+    const participants = registrations.map((reg) => {
+      const profile = profileMap.get(reg.studentId._id.toString());
+
+      return {
+        _id: reg._id,
+        registeredAt: reg.createdAt,
+        attended: reg.attended,
+        paymentStatus: txMap.get(reg.studentId._id.toString()) || "free",
+
+        student: {
+          _id: reg.studentId._id,
+          name: reg.studentId.name,
+          email: reg.studentId.email,
+          department: profile?.department || null,
+          batchYear: profile?.batchYear || null,
+          profileImage: profile?.profileImage || null,
+        },
+      };
+    });
 
     res.json({ success: true, participants, total: participants.length });
   } catch (err) {

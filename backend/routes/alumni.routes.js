@@ -5,6 +5,7 @@ const auth = require("../middleware/auth.middleware");
 const { optionalAuth } = require("../middleware/auth.middleware");
 const {
   getMyProfile,
+  updateProfile,
   updateAbout,
   createSession,
   getMySessions,
@@ -21,8 +22,14 @@ const {
 } = require("../controllers/alumni.controller");
 
 router.get("/profile", auth, getMyProfile);
+router.patch("/profile", upload.single("profileImage"), auth, updateProfile);
 router.patch("/about", auth, updateAbout);
-router.post("/create-session", upload.single("coverImage"), auth, createSession);
+router.post(
+  "/create-session",
+  upload.single("coverImage"),
+  auth,
+  createSession,
+);
 router.get("/my-sessions", auth, getMySessions);
 router.get("/notifications", auth, getNotifications);
 router.patch("/notifications/read", auth, markNotificationsRead);

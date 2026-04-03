@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Calendar, MessageSquare, CheckCheck, Users, ExternalLink, Radio, Star } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  MessageSquare,
+  CheckCheck,
+  Users,
+  ExternalLink,
+  Radio,
+  Star,
+} from "lucide-react";
 import { authFetch } from "../../../../src/services/authFetch";
 import { useNotifications } from "../../../context/NotificationContext";
 import { useRouter } from "next/navigation";
@@ -24,7 +33,11 @@ const TYPE_ICON = {
 };
 
 const formatDate = (iso) =>
-  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([]);
@@ -58,7 +71,9 @@ export default function NotificationsPage() {
   };
 
   const markAsRead = async (id) => {
-    setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+    setNotifications((prev) =>
+      prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+    );
     await authFetch(`${API}/student/notifications/read`, { method: "PATCH" });
     setUnreadCount(0);
   };
@@ -74,7 +89,9 @@ export default function NotificationsPage() {
     if (!groupId) return;
     setJoiningId(notif._id);
     try {
-      const res = await authFetch(`${API}/student/groups/${groupId}/join`, { method: "POST" });
+      const res = await authFetch(`${API}/student/groups/${groupId}/join`, {
+        method: "POST",
+      });
       const data = await res.json();
       if (data.success) {
         showFlash(`You joined "${notif.meta.groupName}" successfully`);
@@ -83,8 +100,8 @@ export default function NotificationsPage() {
           prev.map((n) =>
             n._id === notif._id
               ? { ...n, isRead: true, meta: { ...n.meta, alreadyJoined: true } }
-              : n
-          )
+              : n,
+          ),
         );
       } else {
         showFlash(data.message || "Failed to join group", "error");
@@ -97,7 +114,10 @@ export default function NotificationsPage() {
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
-  const filtered = filter === "unread" ? notifications.filter((n) => !n.isRead) : notifications;
+  const filtered =
+    filter === "unread"
+      ? notifications.filter((n) => !n.isRead)
+      : notifications;
 
   if (loading) return <Loader />;
 
@@ -114,15 +134,15 @@ export default function NotificationsPage() {
 
       {/* Flash message */}
       {flash && (
-        <div className={`notif-flash ${flash.type}`}>
-          {flash.message}
-        </div>
+        <div className={`notif-flash ${flash.type}`}>{flash.message}</div>
       )}
 
       <div className="notifications-header">
         <div>
           <h1>Notifications</h1>
-          {unreadCount > 0 && <span className="unread-badge">{unreadCount} unread</span>}
+          {unreadCount > 0 && (
+            <span className="unread-badge">{unreadCount} unread</span>
+          )}
         </div>
         {unreadCount > 0 && (
           <button className="mark-all-btn" onClick={markAllRead}>
@@ -132,10 +152,16 @@ export default function NotificationsPage() {
       </div>
 
       <div className="filter-row">
-        <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
+        <button
+          className={`filter-btn ${filter === "all" ? "active" : ""}`}
+          onClick={() => setFilter("all")}
+        >
           All
         </button>
-        <button className={`filter-btn ${filter === "unread" ? "active" : ""}`} onClick={() => setFilter("unread")}>
+        <button
+          className={`filter-btn ${filter === "unread" ? "active" : ""}`}
+          onClick={() => setFilter("unread")}
+        >
           Unread
         </button>
       </div>
@@ -155,39 +181,48 @@ export default function NotificationsPage() {
             const notifTitle = isGroupInvite
               ? "Join Group Chat"
               : notif.type === "session_cancelled"
-              ? "Session Cancelled"
-              : isNewSession
-              ? "New Session Available"
-              : isSessionLive
-              ? "Session is Live Now!"
-              : isSessionCompleted
-              ? "Session Completed"
-              : "Session Update";
+                ? "Session Cancelled"
+                : isNewSession
+                  ? "New Session Available"
+                  : isSessionLive
+                    ? "Session is Live Now!"
+                    : isSessionCompleted
+                      ? "Session Completed"
+                      : "Session Update";
 
             return (
-              <div key={notif._id} className={`notification-item ${!notif.isRead ? "unread" : ""}`}>
-                <span className={`notif-dot ${!notif.isRead ? "dot-unread" : "dot-read"}`} />
+              <div
+                key={notif._id}
+                className={`notification-item ${!notif.isRead ? "unread" : ""}`}
+              >
+                <span
+                  className={`notif-dot ${!notif.isRead ? "dot-unread" : "dot-read"}`}
+                />
 
                 <div className={`notif-icon ${notif.type}`}>
                   <Icon size={18} />
                 </div>
 
                 <div className="notif-content">
-                  <p className={`notif-title ${!notif.isRead ? "bold" : ""}`}>{notifTitle}</p>
+                  <p className={`notif-title ${!notif.isRead ? "bold" : ""}`}>
+                    {notifTitle}
+                  </p>
                   <p className="notif-desc">{notif.message}</p>
                   <p className="notif-time">{formatDate(notif.createdAt)}</p>
 
                   {isGroupInvite && (
                     <div className="notif-actions">
                       {alreadyJoined ? (
-                        <span className="joined-badge">? Joined</span>
+                        <span className="joined-badge">Joined</span>
                       ) : (
                         <button
                           className="join-group-btn"
                           disabled={joiningId === notif._id}
                           onClick={() => handleJoinGroup(notif)}
                         >
-                          {joiningId === notif._id ? "Joining..." : "Join Group"}
+                          {joiningId === notif._id
+                            ? "Joining..."
+                            : "Join Group"}
                         </button>
                       )}
                     </div>
@@ -197,7 +232,11 @@ export default function NotificationsPage() {
                     <div className="notif-actions">
                       <button
                         className="view-session-btn"
-                        onClick={() => router.push(`/student/session/${notif.meta.sessionId}`)}
+                        onClick={() =>
+                          router.push(
+                            `/student/session/${notif.meta.sessionId}`,
+                          )
+                        }
                       >
                         <ExternalLink size={13} /> View Session
                       </button>
@@ -233,7 +272,10 @@ export default function NotificationsPage() {
                 </div>
 
                 {!notif.isRead && (
-                  <button className="mark-read-btn" onClick={() => markAsRead(notif._id)}>
+                  <button
+                    className="mark-read-btn"
+                    onClick={() => markAsRead(notif._id)}
+                  >
                     <CheckCheck size={14} />
                     Mark as read
                   </button>
