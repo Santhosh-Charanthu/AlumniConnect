@@ -1,11 +1,17 @@
 "use client";
 
 import styles from "../register/register.module.css"; // ?? reuse same CSS
+import demoStyles from "./demo.module.css";
 import { useState } from "react";
 import { loginUser } from "../../src/services/api";
 import { useRouter } from "next/navigation";
 import { useToast } from "../context/ToastContext";
 import Link from "next/link";
+
+const DEMO_CREDENTIALS = {
+  student: { email: "santhosh@college.edu", password: "password123" },
+  alumni: { email: "venkat@college.edu", password: "password123" },
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +20,11 @@ export default function LoginPage() {
 
   const [role, setRole] = useState("student");
   const [form, setForm] = useState({ email: "", password: "" });
+
+  const fillDemo = () => {
+    setForm(DEMO_CREDENTIALS[role]);
+    setErrors({});
+  };
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -91,6 +102,27 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Demo Credentials Banner */}
+          <div className={demoStyles.demoBanner}>
+            <div className={demoStyles.demoLeft}>
+              <span className={demoStyles.demoLabel}>
+                Demo {role === "student" ? "Student" : "Alumni"}
+              </span>
+              <span className={demoStyles.demoEmail}>
+                {DEMO_CREDENTIALS[role].email}
+              </span>
+              <span className={demoStyles.demoDot}>·</span>
+              <span className={demoStyles.demoPass}>password123</span>
+            </div>
+            <button
+              type="button"
+              className={demoStyles.demoBtn}
+              onClick={fillDemo}
+            >
+              Use
+            </button>
+          </div>
+
           {/* Form Fields */}
           <div className={styles.formGrid}>
             <div className={styles.fullWidth}>
@@ -100,6 +132,7 @@ export default function LoginPage() {
                 type="email"
                 className={styles.input}
                 placeholder="yourname@college.edu"
+                value={form.email}
                 onChange={handleChange}
               />
               {errors.email && (
@@ -114,6 +147,7 @@ export default function LoginPage() {
                 type="password"
                 className={styles.input}
                 placeholder="Enter your password"
+                value={form.password}
                 onChange={handleChange}
               />
               {errors.password && (

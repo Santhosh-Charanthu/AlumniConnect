@@ -1,0 +1,62 @@
+.demoBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+
+.demoLeft {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: #0369a1;
+  min-width: 0;
+}
+
+.demoLabel {
+  font-weight: 700;
+  color: #0284c7;
+  white-space: nowrap;
+}
+
+.demoEmail {
+  font-family: monospace;
+  font-size: 12.5px;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.demoDot {
+  color: #94a3b8;
+}
+
+.demoPass {
+  font-family: monospace;
+  font-size: 12.5px;
+  color: #0f172a;
+}
+
+.demoBtn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #0284c7;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.demoBtn:hover {
+  background: #0369a1;
+}
