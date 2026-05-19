@@ -13,6 +13,8 @@ export function connectSocket(token) {
 
   socket = io(process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000", {
     auth: { token },
+    transports: ["websocket"], // 🔥 CRITICAL FIX
+    withCredentials: true,
     autoConnect: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 2000,

@@ -194,10 +194,20 @@ exports.handleWebhook = async (req, res) => {
 
     if (eventType === "refund.processed") {
       const refund = event.payload.refund.entity;
-      await Transaction.findOneAndUpdate(
-        { razorpayPaymentId: refund.payment_id },
+      const updated = await Transaction.findOneAndUpdate(
+        {
+          razorpayPaymentId: refund.payment_id,
+          status: { $ne: "refunded" },
+        },
         { status: "refunded" },
+        { new: true },
       );
+
+      if (!updated) {
+        console.log("⚠️ Refund already processed:", refund.payment_id);
+        return res.json({ success: true });
+      }
+
       console.log("💸 Refund completed via webhook:", refund.payment_id);
     }
 

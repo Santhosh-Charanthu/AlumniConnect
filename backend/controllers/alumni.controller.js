@@ -8,6 +8,7 @@ const Transaction = require("../models/Transaction");
 const Notification = require("../models/Notification");
 const StudentProfile = require("../models/Student");
 const cloudinary = require("../config/cloudinary");
+const redis = require("../utils/redisClient");
 
 exports.updateProfile = async (req, res) => {
   try {
@@ -237,7 +238,6 @@ exports.createSession = async (req, res) => {
       role: "student",
       college: alumniUser2?.college,
     }).select("_id");
-    const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
 
     await Promise.all(
@@ -248,10 +248,15 @@ exports.createSession = async (req, res) => {
           message: `A new session "${title}" has been created by ${alumniUser?.name || "an alumni"}. Check it out!`,
           meta: { sessionId: session._id, sessionTitle: title },
         });
-        const socketId = onlineUsers.get(student._id.toString());
-        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+        if (io) io.to(`user:${student._id}`).emit("notification:new", notif);
       }),
     );
+
+    const keys = await redis.keys("student:*:explore-sessions");
+
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
 
     res.status(201).json({
       success: true,
@@ -327,6 +332,7 @@ exports.getSessionById = async (req, res) => {
 
 exports.updateSession = async (req, res) => {
   try {
+    const userId = req.user.userId;
     const { id } = req.params;
     const alumni = await Alumni.findOne({ userId: req.user.userId });
     if (!alumni) {
@@ -399,6 +405,12 @@ exports.updateSession = async (req, res) => {
     const updatedSession = await Session.findByIdAndUpdate(id, updateData, {
       new: true,
     });
+
+    const keys = await redis.keys("student:*:explore-sessions");
+
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
 
     res.status(200).json({
       success: true,
@@ -504,14 +516,18 @@ exports.deleteSession = async (req, res) => {
     }
 
     // Push live notifications to online students
-    const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
     studentNotifs.forEach((notif, i) => {
-      const socketId = onlineUsers.get(studentIds[i].toString());
-      if (socketId && io) io.to(socketId).emit("notification:new", notif);
+      if (io) io.to(`user:${studentIds[i]}`).emit("notification:new", notif);
     });
 
     await Session.findByIdAndDelete(id);
+
+    const keys = await redis.keys("student:*:explore-sessions");
+
+    if (keys.length > 0) {
+      await redis.del(keys);
+    }
 
     res
       .status(200)
@@ -558,6 +574,8 @@ exports.getAlumniById = async (req, res) => {
 
 exports.searchAlumni = async (req, res) => {
   try {
+    const limit = 10;
+    const cursor = req.query.cursor;
     const { name, college, company, jobTitle, skills, sort } = req.query;
     const hasFilters = name || college || company || jobTitle || skills;
 
@@ -568,7 +586,7 @@ exports.searchAlumni = async (req, res) => {
       const userQuery = {};
       if (name) userQuery.name = { $regex: name, $options: "i" };
       if (college) userQuery.college = { $regex: college, $options: "i" };
-      const matchingUsers = await User.find(userQuery).select("_id");
+      const matchingUsers = await User.find(userQuery).select("_id").lean();
       const matchingUserIds = matchingUsers.map((u) => u._id);
       alumniQuery.userId = { $in: matchingUserIds };
     }
@@ -599,11 +617,33 @@ exports.searchAlumni = async (req, res) => {
     if (sort === "rating") sortOption = { rating: -1 };
     else if (sort === "sessions") sortOption = { totalSessions: -1 };
 
-    const alumni = await Alumni.find(alumniQuery)
-      .populate("userId", "name college")
-      .sort(sortOption);
+    let cursorFilter = {};
+    if (cursor) {
+      cursorFilter._id = { $lt: cursor };
+    }
 
-    res.json({ success: true, alumni });
+    const alumni = await Alumni.find({ ...alumniQuery, ...cursorFilter })
+      .sort({
+        ...sortOption,
+        _id: -1,
+      })
+      .limit(limit)
+      .select("company jobTitle skills rating totalSessions userId")
+      .populate({
+        path: "userId",
+        select: "name college",
+      })
+      .lean();
+
+    const nextCursor = alumni.length > 0 ? alumni[alumni.length - 1]._id : null;
+
+    res.json({
+      success: true,
+      count: alumni.length,
+      nextCursor,
+      hasMore: alumni.length === limit,
+      alumni,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -757,7 +797,6 @@ exports.startSession = async (req, res) => {
     const registrations = await Registration.find({ sessionId: id }).select(
       "studentId",
     );
-    const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
     await Promise.all(
       registrations.map(async (reg) => {
@@ -767,8 +806,7 @@ exports.startSession = async (req, res) => {
           message: `"${session.title}" is now live! Click to join.`,
           meta: { sessionId: session._id, sessionTitle: session.title },
         });
-        const socketId = onlineUsers.get(reg.studentId.toString());
-        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+        if (io) io.to(`user:${reg.studentId}`).emit("notification:new", notif);
       }),
     );
 
@@ -820,7 +858,6 @@ exports.endSession = async (req, res) => {
     const registrations = await Registration.find({ sessionId: id }).select(
       "studentId",
     );
-    const { onlineUsers } = require("../socket/socket");
     const io = req.app.get("io");
     await Promise.all(
       registrations.map(async (reg) => {
@@ -830,8 +867,7 @@ exports.endSession = async (req, res) => {
           message: `"${session.title}" has ended. You can now leave a review!`,
           meta: { sessionId: session._id, sessionTitle: session.title },
         });
-        const socketId = onlineUsers.get(reg.studentId.toString());
-        if (socketId && io) io.to(socketId).emit("notification:new", notif);
+        if (io) io.to(`user:${reg.studentId}`).emit("notification:new", notif);
       }),
     );
 

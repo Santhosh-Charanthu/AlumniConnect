@@ -5,7 +5,6 @@ const Notification = require("../models/Notification");
 const Alumni = require("../models/Alumni");
 const GroupChat = require("../models/GroupChat");
 const User = require("../models/User");
-const { onlineUsers } = require("../socket/socket");
 
 const registerStudent = async ({
   userId,
@@ -99,15 +98,12 @@ const registerStudent = async ({
       },
     });
     // Push live notification to student
-    const studentSocket = onlineUsers.get(userId.toString());
-    if (studentSocket) {
-      const io = req.app.get("io");
-      if (io) {
-        io.to(studentSocket).emit("notification:new", studentNotif);
-        // Make the student's socket join the group room immediately
-        // so they receive real-time messages without needing to reconnect
-        io.in(studentSocket).socketsJoin(`group:${group._id}`);
-      }
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user:${userId}`).emit("notification:new", studentNotif);
+      // Make the student's socket join the group room immediately
+      // so they receive real-time messages without needing to reconnect
+      io.in(`user:${userId}`).socketsJoin(`group:${group._id}`);
     }
   }
 
@@ -118,10 +114,13 @@ const registerStudent = async ({
       type: "session_booking",
     }).sort({ createdAt: -1 });
 
-    const alumniSocket = onlineUsers.get(alumniProfile.userId.toString());
-    if (alumniSocket && alumniNotif) {
+    if (alumniNotif) {
       const io = req.app.get("io");
-      if (io) io.to(alumniSocket).emit("notification:new", alumniNotif);
+      if (io)
+        io.to(`user:${alumniProfile.userId}`).emit(
+          "notification:new",
+          alumniNotif,
+        );
     }
   }
 

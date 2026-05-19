@@ -1,4 +1,6 @@
-require("dotenv").config();
+require("dotenv").config({
+  quiet: true, // suppress logs
+});
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
@@ -14,16 +16,13 @@ const studentRoutes = require("./routes/student.routes");
 const chatRoutes = require("./routes/chat.routes");
 const contactRoutes = require("./routes/contact.routes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const aiRoutes = require("./routes/ai.routes");
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 const httpServer = http.createServer(app);
 
 connectDB();
-
-// Init Socket.io
-const io = initSocket(httpServer);
-app.set("io", io);
 
 app.use(
   cors({
@@ -50,6 +49,7 @@ app.use("/api/student", studentRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -60,6 +60,15 @@ app.use((err, req, res, next) => {
     .json({ success: false, message: err.message || "Server error" });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.get("/test", (req, res) => {
+  res.send(`Handled by ${process.pid}`);
 });
+
+async function startServer() {
+  const io = await initSocket(httpServer);
+  app.set("io", io);
+
+  return httpServer;
+}
+
+module.exports = startServer;

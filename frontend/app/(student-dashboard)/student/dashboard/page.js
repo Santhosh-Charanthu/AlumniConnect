@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "../../../context/ToastContext";
-import { BookOpen, CalendarCheck, CheckCircle, Calendar, Clock, User } from "lucide-react";
+import {
+  BookOpen,
+  CalendarCheck,
+  CheckCircle,
+  Calendar,
+  Clock,
+  User,
+} from "lucide-react";
 import "./dashboard.css";
 import Loader from "../../../components/Loader";
 
@@ -15,11 +22,14 @@ export default function StudentDashboardPage() {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/dashboard`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/dashboard`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
         const data = await res.json();
         if (data.success) {
           setDashboardData(data);
@@ -77,7 +87,9 @@ export default function StudentDashboardPage() {
 
         {upcomingSessions.length === 0 ? (
           <div className="empty-state">
-            <p>No upcoming sessions. Browse available sessions to get started!</p>
+            <p>
+              No upcoming sessions. Browse available sessions to get started!
+            </p>
           </div>
         ) : (
           <div className="sessions-list">
@@ -91,13 +103,20 @@ export default function StudentDashboardPage() {
                 </div>
                 <div className="session-time">
                   <span>
-                    <Calendar size={14} /> {new Date(session.date).toLocaleDateString()}
+                    <Calendar size={14} />{" "}
+                    {new Date(session.date).toLocaleDateString()}
                   </span>
                   <span>
-                    <Clock size={14} /> {new Date(session.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    <Clock size={14} />{" "}
+                    {new Date(session.time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
-                <span className={`status-badge status-${session.status?.toLowerCase()}`}>
+                <span
+                  className={`status-badge status-${session.status?.toLowerCase()}`}
+                >
                   {session.status}
                 </span>
               </div>

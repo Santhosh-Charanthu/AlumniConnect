@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const upload = require("../middleware/upload.middleware");
+const { uploadProfileImage } = require("../middleware/upload.middleware");
 const auth = require("../middleware/auth.middleware");
 const {
   getMyProfile,
@@ -24,7 +24,7 @@ const {
 } = require("../controllers/student.controller");
 
 router.get("/profile", auth, getMyProfile);
-router.patch("/profile", upload.single("profileImage"), auth, updateProfile);
+router.patch("/profile", ...uploadProfileImage, auth, updateProfile);
 router.get("/my-bookings", auth, getMyBookings);
 router.get("/my-sessions", auth, getMySessions);
 router.get("/dashboard", auth, getDashboard);

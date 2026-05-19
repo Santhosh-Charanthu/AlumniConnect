@@ -6,6 +6,7 @@ const Session = require("../models/Session");
 const User = require("../models/User");
 const cloudinary = require("../config/cloudinary");
 const registerStudent = require("../utils/registerStudent");
+const redis = require("../utils/redisClient");
 
 exports.getMyBookings = async (req, res) => {
   try {
@@ -208,15 +209,30 @@ exports.getSessionById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
-    console.log(userId);
     const Alumni = require("../models/Alumni");
-
-    const session = await Session.findById(id);
+    let session = null;
+    const cached = await redis.get(`session:${id}`);
+    if (cached) {
+      console.log("CACHE HIT");
+      session = JSON.parse(cached);
+    } else {
+      console.log("CACHE MISS");
+      session = await Session.findById(id).lean();
+      if (!session) {
+        return res.status(404).json({
+          success: false,
+          message: "Session not found",
+        });
+      }
+      await redis.set(`session:${id}`, JSON.stringify(session), {
+        EX: 60,
+      });
+    }
     if (!session)
       return res
         .status(404)
         .json({ success: false, message: "Session not found" });
-    const s = session.toObject();
+    const s = session.toObject ? session.toObject() : session;
 
     // Enrich with alumni info
     const alumniProfile = await Alumni.findById(s.alumniId).populate(
@@ -257,6 +273,15 @@ exports.getUpcomingSessions = async (req, res) => {
   try {
     const now = new Date();
     const userId = req.user.userId;
+    const cachedKey = `student:${userId}:explore-sessions`;
+
+    const cachedData = await redis.get(cachedKey);
+    if (cachedData) {
+      console.log("Cache HIT");
+      return res.json(JSON.parse(cachedData));
+    }
+
+    console.log("Cache MISS");
 
     const sessions = await Session.find({
       status: "scheduled",
@@ -290,6 +315,17 @@ exports.getUpcomingSessions = async (req, res) => {
         s.isRegistered = registeredIds.has(s._id.toString());
         return s;
       }),
+    );
+
+    await redis.set(
+      cachedKey,
+      JSON.stringify({
+        success: true,
+        sessions: populated,
+      }),
+      {
+        EX: 3600,
+      },
     );
 
     res.json({ success: true, sessions: populated });
@@ -429,6 +465,8 @@ exports.registerSession = async (req, res) => {
     }
 
     await registerStudent({ userId, sessionId, req });
+
+    await redis.del(`student:${userId}:explore-sessions`);
 
     res.json({
       success: true,
@@ -635,13 +673,12 @@ exports.unregisterSession = async (req, res) => {
           studentName,
         },
       });
-
-      const { onlineUsers } = require("../socket/socket");
-      const alumniSocket = onlineUsers.get(alumniProfile.userId.toString());
-      if (alumniSocket) {
-        const io = req.app.get("io");
-        if (io) io.to(alumniSocket).emit("notification:new", alumniNotif);
-      }
+      const io = req.app.get("io");
+      if (io)
+        io.to(`user:${alumniProfile.userId}`).emit(
+          "notification:new",
+          alumniNotif,
+        );
     }
 
     res.json({
@@ -702,9 +739,7 @@ exports.joinGroup = async (req, res) => {
     if (io) {
       io.to(`group:${group._id}`).emit("group:receive", populatedJoin);
       // Make the joining student's socket join the room immediately
-      const { onlineUsers } = require("../socket/socket");
-      const studentSocket = onlineUsers.get(userId.toString());
-      if (studentSocket) io.in(studentSocket).socketsJoin(`group:${group._id}`);
+      io.in(`user:${userId}`).socketsJoin(`group:${group._id}`);
     }
 
     await group.populate("members.user", "name role");

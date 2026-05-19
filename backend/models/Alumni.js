@@ -53,7 +53,7 @@ const alumniProfileSchema = new mongoose.Schema(
       { type: mongoose.Schema.Types.ObjectId, ref: "Achievement" },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("AlumniProfile", alumniProfileSchema);

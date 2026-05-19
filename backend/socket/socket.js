@@ -1,18 +1,38 @@
 const { Server } = require("socket.io");
+const { createClient } = require("redis");
+const { createAdapter } = require("@socket.io/redis-adapter");
 const jwt = require("jsonwebtoken");
 const Message = require("../models/Message");
 const GroupChat = require("../models/GroupChat");
 
-// Map userId -> socketId for online presence
-const onlineUsers = new Map();
-
-function initSocket(httpServer) {
+async function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
       origin: process.env.CLIENT_URL || "http://localhost:3001",
       credentials: true,
     },
   });
+
+  const pubClient = createClient({
+    url: process.env.REDIS_URL,
+  });
+
+  const subClient = pubClient.duplicate();
+
+  // 🔥 Error handling (VERY IMPORTANT)
+  pubClient.on("error", (err) => console.error("Redis Pub Error:", err));
+  subClient.on("error", (err) => console.error("Redis Sub Error:", err));
+
+  // 🔥 Connect to Redis
+  await pubClient.connect();
+  await subClient.connect();
+
+  console.log("✅ Connected to Redis");
+
+  // 🔥 Attach adapter
+  io.adapter(createAdapter(pubClient, subClient));
+
+  console.log("✅ Redis adapter attached");
 
   // ── Auth middleware ──────────────────────────────────────────
   io.use((socket, next) => {
@@ -31,8 +51,10 @@ function initSocket(httpServer) {
 
   // ── Connection ───────────────────────────────────────────────
   io.on("connection", async (socket) => {
+    console.log(`🟢 Connected: ${socket.id} | Worker: ${process.pid}`);
     const userId = socket.userId;
-    onlineUsers.set(userId, socket.id);
+    socket.join(`user:${userId}`);
+    console.log(`User ${userId} joined room user:${userId}`);
 
     // Broadcast online status
     io.emit("user:online", { userId });
@@ -51,6 +73,7 @@ function initSocket(httpServer) {
     // Called by the frontend when navigating to a group chat
     // to ensure the socket is in the room even if it was created after initial connect
     socket.on("group:join_room", async ({ groupId }) => {
+      console.log(`📥 ${socket.id} joined ${groupId} | Worker: ${process.pid}`);
       try {
         const group = await GroupChat.findOne({
           _id: groupId,
@@ -83,11 +106,7 @@ function initSocket(httpServer) {
 
           const populated = await msg.populate("senderId", "name role");
 
-          // Deliver to recipient if online
-          const recipientSocket = onlineUsers.get(to);
-          if (recipientSocket) {
-            io.to(recipientSocket).emit("dm:receive", populated);
-          }
+          io.to(`user:${to}`).emit("dm:receive", populated);
 
           // Echo back to sender
           socket.emit("dm:receive", populated);
@@ -105,6 +124,7 @@ function initSocket(httpServer) {
       async ({ groupId, content, mediaUrl, mediaType, mediaName }, ack) => {
         try {
           // Verify sender is a member
+          console.log(`📤 Message from ${process.pid} → Room ${groupId}`);
           const group = await GroupChat.findOne({
             _id: groupId,
             "members.user": userId,
@@ -156,10 +176,8 @@ function initSocket(httpServer) {
         { senderId: from, receiverId: userId, isRead: false },
         { isRead: true },
       );
-      const senderSocket = onlineUsers.get(from);
-      if (senderSocket) {
-        io.to(senderSocket).emit("dm:read_ack", { by: userId });
-      }
+
+      io.to(`user:${from}`).emit("dm:read_ack", { by: userId });
     });
 
     // ── Mark group messages as read ────────────────────────────
@@ -188,14 +206,11 @@ function initSocket(httpServer) {
           ...new Set(unread.map((m) => m.senderId.toString())),
         ];
         for (const senderId of senderIds) {
-          const senderSocket = onlineUsers.get(senderId);
-          if (senderSocket) {
-            io.to(senderSocket).emit("group:read_ack", {
-              groupId,
-              readBy: userId,
-              totalMembers,
-            });
-          }
+          io.to(`user:${senderId}`).emit("group:read_ack", {
+            groupId,
+            readBy: userId,
+            totalMembers,
+          });
         }
       } catch (err) {
         console.error("group:read error:", err.message);
@@ -221,9 +236,7 @@ function initSocket(httpServer) {
         if (msg.type === "group") {
           io.to(`group:${msg.groupId}`).emit("message:edited", populated);
         } else {
-          const recipientSocket = onlineUsers.get(msg.receiverId.toString());
-          if (recipientSocket)
-            io.to(recipientSocket).emit("message:edited", populated);
+          io.to(`user:${msg.receiverId}`).emit("message:edited", populated);
           socket.emit("message:edited", populated);
         }
 
@@ -250,9 +263,7 @@ function initSocket(httpServer) {
         if (groupId) {
           io.to(`group:${groupId}`).emit("message:deleted", { messageId });
         } else {
-          const recipientSocket = onlineUsers.get(receiverId?.toString());
-          if (recipientSocket)
-            io.to(recipientSocket).emit("message:deleted", { messageId });
+          io.to(`user:${receiverId}`).emit("message:deleted", { messageId });
           socket.emit("message:deleted", { messageId });
         }
 
@@ -267,9 +278,7 @@ function initSocket(httpServer) {
       if (groupId) {
         socket.to(`group:${groupId}`).emit("typing:start", { userId, groupId });
       } else if (to) {
-        const recipientSocket = onlineUsers.get(to);
-        if (recipientSocket)
-          io.to(recipientSocket).emit("typing:start", { userId });
+        socket.to(`user:${to}`).emit("typing:start", { userId });
       }
     });
 
@@ -277,15 +286,12 @@ function initSocket(httpServer) {
       if (groupId) {
         socket.to(`group:${groupId}`).emit("typing:stop", { userId, groupId });
       } else if (to) {
-        const recipientSocket = onlineUsers.get(to);
-        if (recipientSocket)
-          io.to(recipientSocket).emit("typing:stop", { userId });
+        socket.to(`user:${to}`).emit("typing:stop", { userId });
       }
     });
 
     // ── Disconnect ─────────────────────────────────────────────
     socket.on("disconnect", () => {
-      onlineUsers.delete(userId);
       io.emit("user:offline", { userId });
     });
   });
@@ -293,4 +299,4 @@ function initSocket(httpServer) {
   return io;
 }
 
-module.exports = { initSocket, onlineUsers };
+module.exports = { initSocket };
