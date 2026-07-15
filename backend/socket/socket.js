@@ -88,7 +88,10 @@ async function initSocket(httpServer) {
     // ── Direct message ─────────────────────────────────────────
     socket.on(
       "dm:send",
-      async ({ to, content, mediaUrl, mediaType, mediaName }, ack) => {
+      async (
+        { to, content, mediaUrl, mediaType, mediaName, clientTimestamp },
+        ack,
+      ) => {
         try {
           if (!content?.trim() && !mediaUrl) {
             if (ack) ack({ success: false, error: "Empty message" });
@@ -105,13 +108,17 @@ async function initSocket(httpServer) {
           });
 
           const populated = await msg.populate("senderId", "name role");
+          const messageWithLatency = {
+            ...populated.toObject(),
+            clientTimestamp,
+          };
 
-          io.to(`user:${to}`).emit("dm:receive", populated);
+          io.to(`user:${to}`).emit("dm:receive", messageWithLatency);
 
           // Echo back to sender
-          socket.emit("dm:receive", populated);
+          socket.emit("dm:receive", messageWithLatency);
 
-          if (ack) ack({ success: true, message: populated });
+          if (ack) ack({ success: true, message: messageWithLatency });
         } catch (err) {
           if (ack) ack({ success: false, error: err.message });
         }

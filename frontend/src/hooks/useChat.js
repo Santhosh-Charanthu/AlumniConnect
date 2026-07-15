@@ -46,6 +46,10 @@ export function useChat(type, targetId) {
 
     const registerListeners = (socket) => {
       const onReceive = (msg) => {
+        if (msg.clientTimestamp) {
+          const latency = Date.now() - msg.clientTimestamp;
+          console.log("Message latency:", latency, "ms");
+        }
         if (type === "direct") {
           const senderId = String(msg.senderId?._id || msg.senderId);
           const receiverId = String(msg.receiverId?._id || msg.receiverId);
@@ -190,8 +194,9 @@ export function useChat(type, targetId) {
             mediaUrl: media.url,
             mediaType: media.type,
             mediaName: media.name,
+            clientTimestamp: Date.now(),
           }
-        : { content };
+        : { content, clientTimestamp: Date.now() };
       if (type === "direct")
         socket.emit("dm:send", { to: targetId, ...payload });
       else socket.emit("group:send", { groupId: targetId, ...payload });
