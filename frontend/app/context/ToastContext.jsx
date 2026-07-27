@@ -37,6 +37,7 @@ export function ToastProvider({ children }) {
         sessionStorage.removeItem("navigating");
         const flash = sessionStorage.getItem("flash");
         if (flash) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setToast(JSON.parse(flash));
           sessionStorage.removeItem("flash");
         }
@@ -48,6 +49,7 @@ export function ToastProvider({ children }) {
       // Client-side navigation happened
       const flash = sessionStorage.getItem("flash");
       if (flash) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setToast(JSON.parse(flash));
         sessionStorage.removeItem("flash");
       }

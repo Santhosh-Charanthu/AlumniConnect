@@ -15,10 +15,6 @@ export default function DashboardPage() {
   const [alumni, setAlumni] = useState(null);
   const [loadError, setLoadError] = useState(null);
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
-
   const fetchSessions = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -45,6 +41,12 @@ export default function DashboardPage() {
       setLoadError("Failed to connect to server");
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 🎯 Filter logic
   const now = new Date();

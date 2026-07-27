@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { connectSocket } from "../../src/lib/socket";
 
 const MessageContext = createContext({
@@ -17,7 +24,9 @@ function getMyUserId() {
     const token = localStorage.getItem("token");
     if (!token) return null;
     return JSON.parse(atob(token.split(".")[1])).userId;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export function MessageProvider({ children }) {
@@ -36,9 +45,12 @@ export function MessageProvider({ children }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/unread-count`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/unread-count`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await res.json();
       if (data.success && mountedRef.current) {
         setUnreadMessages(data.unreadCount);
@@ -49,8 +61,11 @@ export function MessageProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUnread();
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, [fetchUnread]);
 
   useEffect(() => {
@@ -83,7 +98,9 @@ export function MessageProvider({ children }) {
     };
 
     // Re-fetch on read ack to get accurate counts
-    const onReadAck = () => { if (mountedRef.current) fetchUnread(); };
+    const onReadAck = () => {
+      if (mountedRef.current) fetchUnread();
+    };
 
     socket.on("group:receive", onGroupMsg);
     socket.on("dm:receive", onDmMsg);
@@ -107,7 +124,16 @@ export function MessageProvider({ children }) {
   }, []);
 
   return (
-    <MessageContext.Provider value={{ unreadMessages, unreadDMs, unreadGroups, setUnreadMessages, decrementUnread, setActiveConversation }}>
+    <MessageContext.Provider
+      value={{
+        unreadMessages,
+        unreadDMs,
+        unreadGroups,
+        setUnreadMessages,
+        decrementUnread,
+        setActiveConversation,
+      }}
+    >
       {children}
     </MessageContext.Provider>
   );

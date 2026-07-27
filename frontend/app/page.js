@@ -1,9 +1,21 @@
 "use client";
 import Link from "next/link";
 import {
-  BookOpen, MessageCircle, Compass, Globe,
-  ArrowRight, Users, CalendarCheck, Star,
-  Sparkles, ChevronRight, Zap, TrendingUp, ShieldCheck, CreditCard, RotateCcw
+  BookOpen,
+  MessageCircle,
+  Compass,
+  Globe,
+  ArrowRight,
+  Users,
+  CalendarCheck,
+  Star,
+  Sparkles,
+  ChevronRight,
+  Zap,
+  TrendingUp,
+  ShieldCheck,
+  CreditCard,
+  RotateCcw,
 } from "lucide-react";
 import "./landing.css";
 
@@ -35,10 +47,30 @@ const features = [
 ];
 
 const steps = [
-  { num: "01", icon: <Zap size={20} />, title: "Create your account", desc: "Sign up as a student or alumni in under a minute." },
-  { num: "02", icon: <Users size={20} />, title: "Explore & connect", desc: "Browse alumni profiles and available mentoring sessions." },
-  { num: "03", icon: <CalendarCheck size={20} />, title: "Book a session", desc: "Reserve your spot and get a dedicated group chat instantly." },
-  { num: "04", icon: <TrendingUp size={20} />, title: "Grow your career", desc: "Apply insights from real-world professionals to your journey." },
+  {
+    num: "01",
+    icon: <Zap size={20} />,
+    title: "Create your account",
+    desc: "Sign up as a student or alumni in under a minute.",
+  },
+  {
+    num: "02",
+    icon: <Users size={20} />,
+    title: "Explore & connect",
+    desc: "Browse alumni profiles and available mentoring sessions.",
+  },
+  {
+    num: "03",
+    icon: <CalendarCheck size={20} />,
+    title: "Book a session",
+    desc: "Reserve your spot and get a dedicated group chat instantly.",
+  },
+  {
+    num: "04",
+    icon: <TrendingUp size={20} />,
+    title: "Grow your career",
+    desc: "Apply insights from real-world professionals to your journey.",
+  },
 ];
 
 const stats = [
@@ -57,7 +89,9 @@ export default function LandingPage() {
           AlumniConnect
         </span>
         <div className="lp-nav-links">
-          <Link href="/login" className="lp-btn-ghost">Log in</Link>
+          <Link href="/login" className="lp-btn-ghost">
+            Log in
+          </Link>
           <Link href="/register" className="lp-btn-primary">
             Get started <ChevronRight size={15} />
           </Link>
@@ -90,7 +124,10 @@ export default function LandingPage() {
         </p>
 
         <div className="lp-hero-cta">
-          <Link href="/register" className="lp-btn-primary lp-btn-lg lp-btn-glow">
+          <Link
+            href="/register"
+            className="lp-btn-primary lp-btn-lg lp-btn-glow"
+          >
             Start for free <ArrowRight size={17} />
           </Link>
           <Link href="/login" className="lp-btn-outline lp-btn-lg">
@@ -141,7 +178,9 @@ export default function LandingPage() {
                     <span>{s.num}</span>
                     <div className="lp-step-ring" />
                   </div>
-                  {i < steps.length - 1 && <div className="lp-step-connector" />}
+                  {i < steps.length - 1 && (
+                    <div className="lp-step-connector" />
+                  )}
                 </div>
                 <div className="lp-step-icon">{s.icon}</div>
                 <h3>{s.title}</h3>
@@ -157,31 +196,54 @@ export default function LandingPage() {
         <div className="lp-section-inner">
           <p className="lp-section-label">Secure Payments</p>
           <h2 className="lp-section-title">Pay safely, learn confidently</h2>
-          <p className="lp-section-sub">All session payments are processed through <strong>Razorpay</strong>, India's leading payment gateway. Your financial data is always protected.</p>
+          <p className="lp-section-sub">
+            All session payments are processed through <strong>Razorpay</strong>
+            , India&apos;s leading payment gateway. Your financial data is
+            always protected.
+          </p>
           <div className="lp-payment-grid">
             <div className="lp-payment-card">
-              <div className="lp-payment-icon"><ShieldCheck size={22} /></div>
+              <div className="lp-payment-icon">
+                <ShieldCheck size={22} />
+              </div>
               <h3>PCI-DSS Secure</h3>
-              <p>Razorpay is fully PCI-DSS compliant. We never store your card or UPI details.</p>
+              <p>
+                Razorpay is fully PCI-DSS compliant. We never store your card or
+                UPI details.
+              </p>
             </div>
             <div className="lp-payment-card">
-              <div className="lp-payment-icon"><CreditCard size={22} /></div>
+              <div className="lp-payment-icon">
+                <CreditCard size={22} />
+              </div>
               <h3>Multiple Payment Methods</h3>
-              <p>Pay via UPI, credit/debit cards, net banking, or wallets — whatever works for you.</p>
+              <p>
+                Pay via UPI, credit/debit cards, net banking, or wallets —
+                whatever works for you.
+              </p>
             </div>
             <div className="lp-payment-card">
-              <div className="lp-payment-icon"><RotateCcw size={22} /></div>
+              <div className="lp-payment-icon">
+                <RotateCcw size={22} />
+              </div>
               <h3>Hassle-Free Refunds</h3>
-              <p>Cancel 24+ hours before a session for a full refund. Alumni cancellations are always fully refunded.</p>
+              <p>
+                Cancel 24+ hours before a session for a full refund. Alumni
+                cancellations are always fully refunded.
+              </p>
             </div>
           </div>
           <div className="lp-payment-note">
             <span>Powered by</span>
             <span className="lp-razorpay-badge">Razorpay</span>
             <span>·</span>
-            <Link href="/refund-policy" className="lp-payment-link">Refund Policy</Link>
+            <Link href="/refund-policy" className="lp-payment-link">
+              Refund Policy
+            </Link>
             <span>·</span>
-            <Link href="/terms" className="lp-payment-link">Terms</Link>
+            <Link href="/terms" className="lp-payment-link">
+              Terms
+            </Link>
           </div>
         </div>
       </section>
@@ -189,22 +251,33 @@ export default function LandingPage() {
       {/* ── CTA banner ── */}
       <section className="lp-cta-banner">
         <div className="lp-cta-inner">
-          <p className="lp-section-label" style={{ marginBottom: 14 }}>Get started today</p>
+          <p className="lp-section-label" style={{ marginBottom: 14 }}>
+            Get started today
+          </p>
           <h2>Ready to accelerate your career?</h2>
-          <p>Join thousands of students already learning from alumni who've walked the path.</p>
+          <p>
+            Join thousands of students already learning from alumni who&apos;ve
+            walked the path.
+          </p>
           <div className="lp-cta-actions">
             <Link href="/register" className="lp-btn-primary lp-btn-lg">
               Create free account <ArrowRight size={16} />
             </Link>
-            <Link href="/login" className="lp-btn-outline lp-btn-lg">Log in</Link>
+            <Link href="/login" className="lp-btn-outline lp-btn-lg">
+              Log in
+            </Link>
           </div>
           <div className="lp-cta-proof">
             <div className="lp-cta-avatars">
-              {["S","A","R","K","M"].map((l, i) => (
-                <div key={i} className="lp-cta-av" style={{ zIndex: 5 - i }}>{l}</div>
+              {["S", "A", "R", "K", "M"].map((l, i) => (
+                <div key={i} className="lp-cta-av" style={{ zIndex: 5 - i }}>
+                  {l}
+                </div>
               ))}
             </div>
-            <p><strong>500+</strong> alumni mentors ready to help you</p>
+            <p>
+              <strong>500+</strong> alumni mentors ready to help you
+            </p>
           </div>
         </div>
       </section>

@@ -39,6 +39,7 @@ export default function SessionDetailPage() {
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handlePayment = async () => {
@@ -324,7 +325,8 @@ export default function SessionDetailPage() {
             </div>
             <h3>Confirm Booking</h3>
             <p>
-              You're about to register for <strong>{session.title}</strong>.
+              You&apos;re about to register for <strong>{session.title}</strong>
+              .
               {session.price > 0 && (
                 <>
                   {" "}

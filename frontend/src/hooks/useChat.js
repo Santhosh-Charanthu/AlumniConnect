@@ -14,7 +14,9 @@ export function useChat(type, targetId) {
     if (loadedRef.current === targetId) return; // already loaded
     loadedRef.current = targetId;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTypingUsers([]);
 
     const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";

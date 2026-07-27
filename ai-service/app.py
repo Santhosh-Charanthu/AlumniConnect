@@ -161,8 +161,8 @@ def calculate_skill_matched(student_skills, alumni_skills): # Brute force
 
 
 if __name__ == '__main__':
-app.run(
-    host="0.0.0.0",
-    port=int(os.getenv("PORT", 7000)),
-    debug=False
-)
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 7000)),
+        debug=False
+    )

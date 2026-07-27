@@ -152,6 +152,7 @@ function ContextMenu({ onEdit, onDelete, onClose, anchorEl }) {
       const menuWidth = 160;
       let left = rect.right - menuWidth;
       if (left < 8) left = 8;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPos({ top: rect.bottom + 6, left });
     }
   }, [anchorEl]);
@@ -612,6 +613,7 @@ export default function AlumniMessagesPage() {
     connectSocket(token);
     loadData();
     return () => setActiveConversation(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

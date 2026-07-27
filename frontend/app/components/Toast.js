@@ -19,19 +19,22 @@ const TITLES = {
 export default function Toast({ type = "success", message, onClose }) {
   const [leaving, setLeaving] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => handleClose(), 3500);
-    return () => clearTimeout(timer);
-  }, []);
-
   const handleClose = () => {
     if (leaving) return;
     setLeaving(true);
     setTimeout(() => onClose(), 350); // match fadeOut duration
   };
 
+  useEffect(() => {
+    const timer = setTimeout(() => handleClose(), 3500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className={`toast-box glass ${type} ${leaving ? "toast-leaving" : "toast-entering"}`}>
+    <div
+      className={`toast-box glass ${type} ${leaving ? "toast-leaving" : "toast-entering"}`}
+    >
       <div className="toast-left">
         <div className="toast-icon-circle">
           <span className="toast-check">{ICONS[type] ?? "ℹ"}</span>
@@ -42,7 +45,9 @@ export default function Toast({ type = "success", message, onClose }) {
         <div className="toast-msg">{message}</div>
         <div className={`toast-bar ${type !== "success" ? "error-bar" : ""}`} />
       </div>
-      <button className="toast-close" onClick={handleClose} aria-label="Close">×</button>
+      <button className="toast-close" onClick={handleClose} aria-label="Close">
+        ×
+      </button>
     </div>
   );
 }

@@ -2,11 +2,24 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Sparkles, ArrowLeft, Mail, MessageSquare, Clock, Send, CheckCircle } from "lucide-react";
+import {
+  Sparkles,
+  ArrowLeft,
+  Mail,
+  MessageSquare,
+  Clock,
+  Send,
+  CheckCircle,
+} from "lucide-react";
 import "../components/legal-pages.css";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "general", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "general",
+    message: "",
+  });
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -21,17 +34,25 @@ export default function ContactPage() {
     const errs = {};
     if (!form.name.trim()) errs.name = "Name is required.";
     if (!form.email.trim()) errs.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      errs.email = "Enter a valid email address.";
     if (!form.message.trim()) errs.message = "Message is required.";
-    else if (form.message.trim().length < 10) errs.message = "Message must be at least 10 characters.";
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    else if (form.message.trim().length < 10)
+      errs.message = "Message must be at least 10 characters.";
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send");
       setSent(true);
@@ -57,19 +78,22 @@ export default function ContactPage() {
       <div className="legal-hero">
         <span className="legal-hero-label">Support</span>
         <h1>Contact Us</h1>
-        <p>Have a question or need help? We're here for you.</p>
+        <p>Have a question or need help? We&apos;re here for you.</p>
       </div>
 
       <div className="legal-body">
-
         {/* Contact cards */}
         <div className="legal-section">
           <h2>Get in touch</h2>
           <div className="contact-grid">
             <div className="contact-card">
-              <div className="contact-card-icon"><Mail size={18} /></div>
+              <div className="contact-card-icon">
+                <Mail size={18} />
+              </div>
               <h3>General enquiries</h3>
-              <a href="mailto:alumniconnect455@gmail.com">alumniconnect455@gmail.com</a>
+              <a href="mailto:alumniconnect455@gmail.com">
+                alumniconnect455@gmail.com
+              </a>
               <p>We reply within 24 hours on business days.</p>
             </div>
             {/* <div className="contact-card">
@@ -79,7 +103,9 @@ export default function ContactPage() {
               <p>For partnerships, feedback, or press.</p>
             </div> */}
             <div className="contact-card">
-              <div className="contact-card-icon"><Clock size={18} /></div>
+              <div className="contact-card-icon">
+                <Clock size={18} />
+              </div>
               <h3>Support hours</h3>
               <p>Monday – Friday</p>
               <p>9 AM – 6 PM IST</p>
@@ -94,7 +120,8 @@ export default function ContactPage() {
           {sent ? (
             <div className="contact-success">
               <CheckCircle size={20} />
-              Thanks for reaching out! We'll get back to you within 24 hours.
+              Thanks for reaching out! We&apos;ll get back to you within 24
+              hours.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -121,13 +148,20 @@ export default function ContactPage() {
                     value={form.email}
                     onChange={handleChange}
                   />
-                  {errors.email && <p className="field-error">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="field-error">{errors.email}</p>
+                  )}
                 </div>
               </div>
 
               <div className="form-group">
                 <label htmlFor="subject">Subject</label>
-                <select id="subject" name="subject" value={form.subject} onChange={handleChange}>
+                <select
+                  id="subject"
+                  name="subject"
+                  value={form.subject}
+                  onChange={handleChange}
+                >
                   <option value="general">General enquiry</option>
                   <option value="account">Account issue</option>
                   <option value="session">Session or booking</option>
@@ -146,10 +180,16 @@ export default function ContactPage() {
                   value={form.message}
                   onChange={handleChange}
                 />
-                {errors.message && <p className="field-error">{errors.message}</p>}
+                {errors.message && (
+                  <p className="field-error">{errors.message}</p>
+                )}
               </div>
 
-              <button type="submit" className="contact-submit" disabled={loading}>
+              <button
+                type="submit"
+                className="contact-submit"
+                disabled={loading}
+              >
                 <Send size={15} />
                 {loading ? "Sending…" : "Send message"}
               </button>
@@ -161,10 +201,14 @@ export default function ContactPage() {
           <h2>Other resources</h2>
           <p>
             Looking for legal information?{" "}
-            <Link href="/privacy" style={{ color: "#ff7a18" }}>Privacy Policy</Link>
-            {" "}and{" "}
-            <Link href="/terms" style={{ color: "#ff7a18" }}>Terms of Service</Link>
-            {" "}are available for your reference.
+            <Link href="/privacy" style={{ color: "#ff7a18" }}>
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/terms" style={{ color: "#ff7a18" }}>
+              Terms of Service
+            </Link>{" "}
+            are available for your reference.
           </p>
         </div>
       </div>

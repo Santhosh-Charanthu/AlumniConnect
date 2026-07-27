@@ -207,7 +207,7 @@ export default function StudentAlumniProfilePage() {
               ) : (
                 <div className="empty-state">
                   <h3>No about section yet</h3>
-                  <p>This alumni hasn't added an about section.</p>
+                  <p>This alumni hasn&apos;t added an about section.</p>
                 </div>
               )}
             </div>
@@ -219,7 +219,7 @@ export default function StudentAlumniProfilePage() {
               {!alumni.experiences || alumni.experiences.length === 0 ? (
                 <div className="empty-state content-card">
                   <h3>No experience added yet</h3>
-                  <p>This alumni hasn't added any experience.</p>
+                  <p>This alumni hasn&apos;t added any experience.</p>
                 </div>
               ) : (
                 alumni.experiences.map((exp) => (
@@ -247,7 +247,7 @@ export default function StudentAlumniProfilePage() {
               {!alumni.projects || alumni.projects.length === 0 ? (
                 <div className="empty-state content-card">
                   <h3>No projects added yet</h3>
-                  <p>This alumni hasn't added any projects.</p>
+                  <p>This alumni hasn&apos;t added any projects.</p>
                 </div>
               ) : (
                 alumni.projects.map((proj) => (
@@ -293,7 +293,7 @@ export default function StudentAlumniProfilePage() {
               {!alumni.achievements || alumni.achievements.length === 0 ? (
                 <div className="empty-state content-card">
                   <h3>No achievements added yet</h3>
-                  <p>This alumni hasn't added any achievements.</p>
+                  <p>This alumni hasn&apos;t added any achievements.</p>
                 </div>
               ) : (
                 alumni.achievements.map((ach) => (

@@ -14,6 +14,7 @@ export default function AlumniNotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchNotifications = async () => {
@@ -80,18 +81,25 @@ export default function AlumniNotificationsPage() {
 
       {loading ? (
         <div className="notif-list">
-          {[...Array(4)].map((_, i) => <div key={i} className="notif-skeleton" />)}
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="notif-skeleton" />
+          ))}
         </div>
       ) : notifications.length === 0 ? (
         <div className="notif-empty">
           <Bell size={48} />
           <p>No notifications yet</p>
-          <span>You'll be notified when students register for your sessions</span>
+          <span>
+            You&apos;ll be notified when students register for your sessions
+          </span>
         </div>
       ) : (
         <div className="notif-list">
           {notifications.map((n) => (
-            <div key={n._id} className={`notif-item ${n.isRead ? "" : "unread"}`}>
+            <div
+              key={n._id}
+              className={`notif-item ${n.isRead ? "" : "unread"}`}
+            >
               <div className="notif-icon">
                 <UserCheck size={20} />
               </div>

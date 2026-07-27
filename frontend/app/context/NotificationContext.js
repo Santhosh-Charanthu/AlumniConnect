@@ -1,17 +1,29 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { connectSocket, getSocket } from "../../src/lib/socket";
 
-const NotificationContext = createContext({ unreadCount: 0, setUnreadCount: () => {}, refreshUnread: () => {} });
+const NotificationContext = createContext({
+  unreadCount: 0,
+  setUnreadCount: () => {},
+  refreshUnread: () => {},
+});
 
 export function NotificationProvider({ children, role = "alumni" }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const mountedRef = useRef(true);
 
-  const apiUrl = role === "student"
-    ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/notifications`
-    : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/notifications`;
+  const apiUrl =
+    role === "student"
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/student/notifications`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/alumni/notifications`;
 
   const refreshUnread = useCallback(async () => {
     try {
@@ -27,8 +39,11 @@ export function NotificationProvider({ children, role = "alumni" }) {
 
   // Initial fetch
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshUnread();
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+    };
   }, [refreshUnread]);
 
   // Socket: connect and listen for live notifications
@@ -47,7 +62,9 @@ export function NotificationProvider({ children, role = "alumni" }) {
   }, []);
 
   return (
-    <NotificationContext.Provider value={{ unreadCount, setUnreadCount, refreshUnread }}>
+    <NotificationContext.Provider
+      value={{ unreadCount, setUnreadCount, refreshUnread }}
+    >
       {children}
     </NotificationContext.Provider>
   );

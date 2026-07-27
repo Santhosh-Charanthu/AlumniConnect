@@ -255,10 +255,10 @@ exports.login = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
-    const explainResult = await User.findOne({ email }).explain(
-      "executionStats",
-    );
-    console.log(explainResult);
+    // const explainResult = await User.findOne({ email }).explain(
+    //   "executionStats",
+    // );
+    // console.log(explainResult);
     if (!user) {
       return res
         .status(404)
@@ -277,9 +277,7 @@ exports.login = async (req, res) => {
     }
 
     if (role && user.role !== role) {
-      return res
-        .status(403)
-        .json({ success: false, message: "Invalid email or password" });
+      return res.status(403).json({ success: false, message: "Invalid role" });
     }
 
     const token = jwt.sign(

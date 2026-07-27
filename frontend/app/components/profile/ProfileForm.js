@@ -13,6 +13,7 @@ export default function AlumniForm({
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         name: initialData.user?.name || "",
         email: initialData.user?.email || "",
