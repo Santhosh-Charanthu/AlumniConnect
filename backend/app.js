@@ -24,6 +24,13 @@ const httpServer = http.createServer(app);
 
 connectDB();
 
+// Verify mailer on startup — check Render logs for result
+const { transporter } = require("./config/mailer");
+transporter.verify((err) => {
+  if (err) console.error("Mailer connection failed:", err.message);
+  else console.log("Mailer ready ✅");
+});
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:3000",

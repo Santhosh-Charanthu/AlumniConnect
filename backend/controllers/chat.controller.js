@@ -43,12 +43,19 @@ exports.getDMConversations = async (req, res) => {
       { $sort: { createdAt: -1 } },
       {
         $group: {
-          _id: { $cond: [{ $eq: ["$senderId", me] }, "$receiverId", "$senderId"] },
+          _id: {
+            $cond: [{ $eq: ["$senderId", me] }, "$receiverId", "$senderId"],
+          },
           lastMessage: { $first: "$$ROOT" },
           unread: {
             $sum: {
               $cond: [
-                { $and: [{ $eq: ["$receiverId", me] }, { $eq: ["$isRead", false] }] },
+                {
+                  $and: [
+                    { $eq: ["$receiverId", me] },
+                    { $eq: ["$isRead", false] },
+                  ],
+                },
                 1,
                 0,
               ],
@@ -56,7 +63,14 @@ exports.getDMConversations = async (req, res) => {
           },
         },
       },
-      { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
       { $unwind: "$user" },
       { $project: { "user.password": 0 } },
       { $sort: { "lastMessage.createdAt": -1 } },
@@ -77,7 +91,9 @@ exports.createGroup = async (req, res) => {
 
     const members = [
       { user: me, role: "admin" },
-      ...(memberIds || []).filter((id) => id !== me).map((id) => ({ user: id, role: "member" })),
+      ...(memberIds || [])
+        .filter((id) => id !== me)
+        .map((id) => ({ user: id, role: "member" })),
     ];
 
     const group = await GroupChat.create({
@@ -118,7 +134,9 @@ exports.getMyGroups = async (req, res) => {
       { $group: { _id: "$groupId", count: { $sum: 1 } } },
     ]);
     const unreadMap = {};
-    unreadAgg.forEach((r) => { unreadMap[String(r._id)] = r.count; });
+    unreadAgg.forEach((r) => {
+      unreadMap[String(r._id)] = r.count;
+    });
 
     const result = groups.map((g) => ({
       ...g.toObject(),
@@ -136,8 +154,12 @@ exports.getGroupHistory = async (req, res) => {
     const { groupId } = req.params;
     const { page = 1, limit = 50 } = req.query;
 
-    const group = await GroupChat.findOne({ _id: groupId, "members.user": req.user.userId });
-    if (!group) return res.status(403).json({ success: false, message: "Not a member" });
+    const group = await GroupChat.findOne({
+      _id: groupId,
+      "members.user": req.user.userId,
+    });
+    if (!group)
+      return res.status(403).json({ success: false, message: "Not a member" });
 
     const messages = await Message.find({ groupId, type: "group" })
       .sort({ createdAt: -1 })
@@ -158,10 +180,14 @@ exports.addMembers = async (req, res) => {
     const me = req.user.userId;
 
     const group = await GroupChat.findOne({ _id: groupId, "members.user": me });
-    if (!group) return res.status(403).json({ success: false, message: "Not a member" });
+    if (!group)
+      return res.status(403).json({ success: false, message: "Not a member" });
 
-    const isAdmin = group.members.find((m) => m.user.toString() === me && m.role === "admin");
-    if (!isAdmin) return res.status(403).json({ success: false, message: "Admins only" });
+    const isAdmin = group.members.find(
+      (m) => m.user.toString() === me && m.role === "admin",
+    );
+    if (!isAdmin)
+      return res.status(403).json({ success: false, message: "Admins only" });
 
     const existing = group.members.map((m) => m.user.toString());
     const toAdd = memberIds.filter((id) => !existing.includes(id));
@@ -224,7 +250,10 @@ exports.getUnreadCount = async (req, res) => {
 
 exports.uploadChatMedia = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+    if (!req.file)
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
 
     const mime = req.file.mimetype.toLowerCase();
     let mediaType = "image";
@@ -238,7 +267,9 @@ exports.uploadChatMedia = async (req, res) => {
       resourceType = "image";
     }
 
-    const baseName = req.file.originalname.replace(/\s+/g, "_").replace(/\.[^/.]+$/, "");
+    const baseName = req.file.originalname
+      .replace(/\s+/g, "_")
+      .replace(/\.[^/.]+$/, "");
     const publicId = `${Date.now()}-${baseName}`;
 
     // Upload buffer directly to Cloudinary
@@ -253,7 +284,7 @@ exports.uploadChatMedia = async (req, res) => {
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
-        }
+        },
       );
       stream.end(req.file.buffer);
     });
@@ -274,11 +305,15 @@ exports.uploadChatMedia = async (req, res) => {
 exports.proxyDownload = async (req, res) => {
   try {
     const { url, name } = req.query;
-    if (!url) return res.status(400).json({ success: false, message: "Missing url" });
+    if (!url)
+      return res.status(400).json({ success: false, message: "Missing url" });
 
     const filename = name || "document.pdf";
     const axios = require("axios");
-    const upstream = await axios.get(url, { responseType: "stream", maxRedirects: 5 });
+    const upstream = await axios.get(url, {
+      responseType: "stream",
+      maxRedirects: 5,
+    });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     if (upstream.headers["content-length"]) {
@@ -290,6 +325,7 @@ exports.proxyDownload = async (req, res) => {
       ? `Upstream ${err.response.status}: ${err.response.statusText}`
       : err.message;
     console.error("proxyDownload error:", msg);
-    if (!res.headersSent) res.status(500).json({ success: false, message: msg });
+    if (!res.headersSent)
+      res.status(500).json({ success: false, message: msg });
   }
 };

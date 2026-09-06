@@ -700,7 +700,9 @@ exports.getSessionParticipants = async (req, res) => {
 
         student: {
           _id: reg.studentId._id,
+          // @ts-ignore
           name: reg.studentId.name,
+          // @ts-ignore
           email: reg.studentId.email,
           department: profile?.department || null,
           batchYear: profile?.batchYear || null,
@@ -779,6 +781,7 @@ exports.startSession = async (req, res) => {
 
     // Allow starting within ±60 minutes of scheduled start time
     const now = new Date();
+    // @ts-ignore
     const diff = Math.abs(now - new Date(session.startTime)) / 60000;
     if (diff > 60)
       return res.status(400).json({
@@ -840,6 +843,7 @@ exports.endSession = async (req, res) => {
 
     // Must have run for at least 50% of scheduled duration
     const now = new Date();
+    // @ts-ignore
     const elapsed = (now - new Date(session.actualStartTime)) / 60000;
     const minDuration = session.duration * 0.5;
     if (elapsed < minDuration)
